@@ -503,8 +503,130 @@
             color: #c0392b;
         }
 
-        .talent-detail {
-            max-width: 760px;
+        #talentModal .modal-content.talent-detail {
+            width: 100vw;
+            height: 100vh;
+            max-width: none;
+            max-height: none;
+            border-radius: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .detail-full-header {
+            flex: 0 0 auto;
+            margin-bottom: 0;
+            padding: 16px 26px;
+            border-bottom: 1px solid #eef0f5;
+        }
+
+        .detail-body {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+
+        .detail-left {
+            width: 42%;
+            min-width: 380px;
+            padding: 22px 26px 30px;
+            overflow-y: auto;
+            border-right: 1px solid #eef0f5;
+        }
+
+        .detail-right {
+            flex: 1;
+            min-width: 0;
+            padding: 14px 18px 18px;
+            background: #f7f8fc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .attachment-panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding-bottom: 10px;
+        }
+
+        .resume-frame-full {
+            flex: 1;
+            width: 100%;
+            min-height: 0;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .resume-text-details {
+            flex: 0 0 auto;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .resume-text-details summary {
+            cursor: pointer;
+            padding: 4px 0;
+        }
+
+        .pipeline-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 24px 0 10px;
+        }
+
+        .add-job-form {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .add-job-form select {
+            flex: 1;
+            min-width: 140px;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            background: #fff;
+            outline: none;
+        }
+
+        .pipeline-stage-select {
+            background: #eef0ff;
+            color: #4b56b8;
+            border: none;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        @media (max-width: 800px) {
+            .detail-body {
+                flex-direction: column;
+            }
+
+            .detail-left {
+                width: auto;
+                min-width: 0;
+                max-height: 46vh;
+                border-right: none;
+                border-bottom: 1px solid #eef0f5;
+            }
+
+            .detail-right {
+                min-height: 46vh;
+            }
         }
 
         .detail-grid {
@@ -547,13 +669,6 @@
             border-radius: 8px;
         }
 
-        .attachment-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
         .attachment-name {
             font-size: 14px;
             color: #333;
@@ -574,15 +689,6 @@
             background: #e2e6ff;
         }
 
-        .resume-frame {
-            width: 100%;
-            height: 420px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            margin-top: 12px;
-            background: #fff;
-        }
-
         .resume-text {
             max-height: 240px;
             overflow: auto;
@@ -595,19 +701,6 @@
             padding: 14px;
             border-radius: 8px;
             font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        }
-
-        #tdApplications {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        #tdApplications th,
-        #tdApplications td {
-            padding: 10px 12px;
-            text-align: left;
-            font-size: 13px;
-            border-bottom: 1px solid #eee;
         }
 
         .pipeline-list {
@@ -636,14 +729,6 @@
             color: #333;
         }
 
-        .pipeline-stage-badge {
-            background: #eef0ff;
-            color: #4b56b8;
-            border-radius: 20px;
-            padding: 3px 10px;
-            font-size: 12px;
-        }
-
         .pipeline-date {
             margin-left: auto;
             font-size: 12px;
@@ -658,24 +743,24 @@
 
         .pipeline-step {
             flex: 1;
-            min-width: 72px;
+            min-width: 46px;
             text-align: center;
             position: relative;
-            font-size: 11px;
+            font-size: 10px;
             color: #aaa;
         }
 
         .pipeline-step .dot {
-            width: 22px;
-            height: 22px;
-            line-height: 22px;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
             border-radius: 50%;
             background: #eef0f7;
             color: #999;
-            margin: 0 auto 6px;
+            margin: 0 auto 5px;
             position: relative;
             z-index: 1;
-            font-size: 11px;
+            font-size: 10px;
         }
 
         .pipeline-step.done .dot {
@@ -701,7 +786,7 @@
         .pipeline-step:not(:last-child)::after {
             content: '';
             position: absolute;
-            top: 11px;
+            top: 10px;
             left: 50%;
             width: 100%;
             height: 2px;
@@ -996,41 +1081,52 @@
     <!-- 候选人详情弹窗 -->
     <div id="talentModal" class="modal">
         <div class="modal-content talent-detail">
-            <div class="modal-header">
+            <div class="modal-header detail-full-header">
                 <h2 id="tdName">候选人详情</h2>
                 <button class="modal-close" onclick="closeTalentModal()">✕</button>
             </div>
 
-            <div class="detail-grid">
-                <div><div class="detail-label">邮箱</div><div class="detail-value" id="tdEmail">-</div></div>
-                <div><div class="detail-label">电话</div><div class="detail-value" id="tdPhone">-</div></div>
-                <div><div class="detail-label">岗位方向</div><div class="detail-value" id="tdPosition">-</div></div>
-                <div><div class="detail-label">经验</div><div class="detail-value" id="tdExperience">-</div></div>
-                <div><div class="detail-label">状态</div><div class="detail-value" id="tdStatus">-</div></div>
-                <div><div class="detail-label">入库时间</div><div class="detail-value" id="tdCreatedAt">-</div></div>
-            </div>
-            <div id="tdTags" class="detail-tags"></div>
+            <div class="detail-body">
+                <div class="detail-left">
+                    <div class="detail-grid">
+                        <div><div class="detail-label">邮箱</div><div class="detail-value" id="tdEmail">-</div></div>
+                        <div><div class="detail-label">电话</div><div class="detail-value" id="tdPhone">-</div></div>
+                        <div><div class="detail-label">岗位方向</div><div class="detail-value" id="tdPosition">-</div></div>
+                        <div><div class="detail-label">经验</div><div class="detail-value" id="tdExperience">-</div></div>
+                        <div><div class="detail-label">状态</div><div class="detail-value" id="tdStatus">-</div></div>
+                        <div><div class="detail-label">入库时间</div><div class="detail-value" id="tdCreatedAt">-</div></div>
+                    </div>
+                    <div id="tdTags" class="detail-tags"></div>
 
-            <h3 class="detail-section-title">🤖 AI 分析</h3>
-            <div id="tdAnalysis" class="detail-text">-</div>
+                    <h3 class="detail-section-title">🤖 AI 分析</h3>
+                    <div id="tdAnalysis" class="detail-text">-</div>
 
-            <h3 class="detail-section-title">📎 附件简历</h3>
-            <div id="tdAttachmentBox">
-                <div class="attachment-row">
-                    <span id="tdAttachName" class="attachment-name">-</span>
-                    <button class="small-btn" onclick="toggleResumePreview()">预览</button>
-                    <button class="small-btn" onclick="downloadResume()">下载</button>
+                    <div class="pipeline-toolbar">
+                        <h3 class="detail-section-title" style="margin: 0;">🗂 岗位 Pipeline</h3>
+                        <button class="small-btn" onclick="toggleAddJobForm()">➕ 加入岗位</button>
+                    </div>
+                    <div id="addJobForm" class="add-job-form" style="display: none;">
+                        <select id="addJobSelect" aria-label="选择岗位"></select>
+                        <select id="addJobStageSelect" aria-label="选择初始阶段"></select>
+                        <button class="small-btn" onclick="addTalentToJob()">确认加入</button>
+                    </div>
+                    <div id="tdPipelineList" class="pipeline-list"></div>
+                    <div id="tdNoApplications" class="api-hint" style="display: none;">暂无投递记录，点击「加入岗位」开始流程。</div>
                 </div>
-                <iframe id="tdResumeFrame" class="resume-frame" style="display: none;" title="简历预览"></iframe>
+
+                <div class="detail-right">
+                    <div class="attachment-panel-head">
+                        <span id="tdAttachName" class="attachment-name">附件简历</span>
+                        <button class="small-btn" onclick="downloadResume()">下载附件</button>
+                    </div>
+                    <iframe id="tdResumeFrame" class="resume-frame-full" title="简历预览"></iframe>
+                    <div id="tdNoAttach" class="api-hint" style="display: none; padding-top: 8px;">该候选人没有附件文件。</div>
+                    <details class="resume-text-details">
+                        <summary>查看简历文本</summary>
+                        <pre id="tdResumeText" class="resume-text"></pre>
+                    </details>
+                </div>
             </div>
-            <div id="tdNoAttach" class="api-hint" style="display: none;">该候选人没有附件文件，可查看下方简历文本。</div>
-
-            <h3 class="detail-section-title">📄 简历文本</h3>
-            <pre id="tdResumeText" class="resume-text"></pre>
-
-            <h3 class="detail-section-title">🗂 岗位 Pipeline 与投递情况</h3>
-            <div id="tdPipelineList" class="pipeline-list"></div>
-            <div id="tdNoApplications" class="api-hint" style="display: none;">暂无投递记录</div>
         </div>
     </div>
 
@@ -2611,6 +2707,40 @@ ${text.slice(0, 6000)}`;
         return jsonResponse(results);
     }
 
+    async function upsertApplication(init) {
+        let body = {};
+        try { body = JSON.parse(init.body || '{}'); } catch (e) { /* ignore */ }
+
+        const talent = db.talents.find(t => t.id === Number(body.talent_id));
+        if (!talent) return jsonResponse({ error: '人才不存在' }, 404);
+        const job = db.jobs.find(j => j.id === Number(body.job_id));
+        if (!job) return jsonResponse({ error: '岗位不存在' }, 404);
+
+        const stage = PIPELINE_STAGES.includes(body.stage) ? body.stage : '简历筛选';
+        const note = typeof body.note === 'string' ? body.note.trim() : '';
+        if (!Array.isArray(talent.applications)) talent.applications = [];
+
+        const existing = talent.applications.find(app => Number(app.job_id) === job.id);
+        if (existing) {
+            existing.stage = stage;
+            existing.job_title = job.title;
+            existing.note = note;
+            existing.updated_at = nowStr();
+        } else {
+            talent.applications.push({
+                job_id: job.id,
+                job_title: job.title,
+                applied_at: nowStr(),
+                stage,
+                note: note || '手动加入岗位',
+                updated_at: nowStr()
+            });
+        }
+
+        saveDB(db);
+        return jsonResponse({ success: true, applications: talent.applications });
+    }
+
     // ============ fetch 拦截 ============
 
     const realFetch = window.fetch ? window.fetch.bind(window) : null;
@@ -2643,6 +2773,7 @@ ${text.slice(0, 6000)}`;
         if (route === 'jobs' && method === 'POST') return addJob(options);
         if (route === 'matches' && method === 'GET') return Promise.resolve(jsonResponse(getMatches()));
         if (route === 'match' && method === 'POST') return runMatch(options);
+        if (route === 'applications' && method === 'POST') return upsertApplication(options);
 
         return Promise.resolve(jsonResponse({ error: '接口不存在' }, 404));
     };
@@ -2684,6 +2815,9 @@ ${text.slice(0, 6000)}`;
                 // 加载岗位列表
                 if (e.target.dataset.tab === 'match') {
                     loadJobsForMatch();
+                }
+                if (e.target.dataset.tab === 'jobs') {
+                    loadJobs();
                 }
             });
         });
@@ -2902,17 +3036,19 @@ ${text.slice(0, 6000)}`;
 
                     const attachment = talent.attachment;
                     const hasAttachment = !!(attachment && attachment.data);
-                    document.getElementById('tdAttachmentBox').style.display = hasAttachment ? 'block' : 'none';
+                    const frame = document.getElementById('tdResumeFrame');
                     document.getElementById('tdNoAttach').style.display = hasAttachment ? 'none' : 'block';
+                    frame.style.display = hasAttachment ? 'block' : 'none';
+                    document.getElementById('tdAttachName').textContent = hasAttachment
+                        ? (attachment.name || (talent.name + '_简历.pdf'))
+                        : '无附件';
                     if (hasAttachment) {
-                        document.getElementById('tdAttachName').textContent =
-                            attachment.name || (talent.name + '_简历.pdf');
+                        frame.src = getAttachmentBlobUrl() || 'about:blank';
+                    } else {
+                        frame.src = 'about:blank';
                     }
 
-                    const frame = document.getElementById('tdResumeFrame');
-                    frame.style.display = 'none';
-                    frame.src = 'about:blank';
-
+                    document.getElementById('addJobForm').style.display = 'none';
                     renderApplications(talent.applications || []);
                     document.getElementById('talentModal').classList.add('active');
                 })
@@ -2946,7 +3082,9 @@ ${text.slice(0, 6000)}`;
                 return `<div class="pipeline-card">
                     <div class="pipeline-head">
                         <span class="pipeline-job">${escapeHtml(app.job_title || '-')}</span>
-                        <span class="pipeline-stage-badge">${escapeHtml(stage)}</span>
+                        <select class="pipeline-stage-select" title="更改投递阶段" onchange="changeStage(${Number(app.job_id) || 0}, this.value)">
+                            ${PIPELINE_STAGES.map(name => `<option value="${name}" ${name === stage ? 'selected' : ''}>${name}</option>`).join('')}
+                        </select>
                         <span class="pipeline-date">投递：${escapeHtml(app.applied_at || '-')}</span>
                     </div>
                     <div class="pipeline-steps">${steps}</div>
@@ -2957,6 +3095,7 @@ ${text.slice(0, 6000)}`;
 
         function closeTalentModal() {
             document.getElementById('talentModal').classList.remove('active');
+            document.getElementById('addJobForm').style.display = 'none';
             const frame = document.getElementById('tdResumeFrame');
             frame.style.display = 'none';
             frame.src = 'about:blank';
@@ -2988,16 +3127,65 @@ ${text.slice(0, 6000)}`;
             }
         }
 
-        function toggleResumePreview() {
-            const frame = document.getElementById('tdResumeFrame');
-            if (frame.style.display === 'block') {
-                frame.style.display = 'none';
+        function toggleAddJobForm() {
+            const form = document.getElementById('addJobForm');
+            const isHidden = form.style.display === 'none' || !form.style.display;
+            if (isHidden) {
+                form.style.display = 'flex';
+                loadJobsForDetail();
+            } else {
+                form.style.display = 'none';
+            }
+        }
+
+        async function loadJobsForDetail() {
+            try {
+                const response = await fetch(`${API_BASE}/jobs`);
+                const jobs = await response.json();
+                document.getElementById('addJobSelect').innerHTML = jobs
+                    .map(job => `<option value="${job.id}">${escapeHtml(job.title)}</option>`)
+                    .join('');
+                document.getElementById('addJobStageSelect').innerHTML = PIPELINE_STAGES
+                    .map(stage => `<option value="${stage}">${stage}</option>`)
+                    .join('');
+            } catch (err) {
+                console.error('加载岗位失败:', err);
+            }
+        }
+
+        async function addTalentToJob() {
+            if (!currentTalent) return;
+            const jobId = Number(document.getElementById('addJobSelect').value);
+            const stage = document.getElementById('addJobStageSelect').value;
+            if (!jobId) {
+                alert('请先选择岗位');
                 return;
             }
-            const url = getAttachmentBlobUrl();
-            if (!url) return;
-            frame.src = url;
-            frame.style.display = 'block';
+            await saveApplication(currentTalent.id, jobId, stage, '手动加入岗位');
+            document.getElementById('addJobForm').style.display = 'none';
+        }
+
+        async function changeStage(jobId, stage) {
+            if (!currentTalent) return;
+            await saveApplication(currentTalent.id, jobId, stage, '');
+        }
+
+        async function saveApplication(talentId, jobId, stage, note) {
+            try {
+                const response = await fetch(`${API_BASE}/applications`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ talent_id: talentId, job_id: jobId, stage, note })
+                });
+                const data = await response.json();
+                if (!data.success) throw new Error(data.error || '保存失败');
+                currentTalent.applications = data.applications || [];
+                renderApplications(currentTalent.applications);
+                loadJobs();
+            } catch (err) {
+                alert('保存投递阶段失败：' + err.message);
+                if (currentTalent) renderApplications(currentTalent.applications || []);
+            }
         }
 
         function downloadResume() {
