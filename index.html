@@ -502,6 +502,119 @@
         .api-status.err {
             color: #c0392b;
         }
+
+        .talent-detail {
+            max-width: 760px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px 24px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 3px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #333;
+            word-break: break-all;
+        }
+
+        .detail-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 14px;
+        }
+
+        .detail-section-title {
+            font-size: 16px;
+            color: #333;
+            margin: 24px 0 10px;
+        }
+
+        .detail-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #444;
+            background: #f8f9ff;
+            padding: 14px;
+            border-radius: 8px;
+        }
+
+        .attachment-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .attachment-name {
+            font-size: 14px;
+            color: #333;
+            margin-right: 4px;
+        }
+
+        .small-btn {
+            background: #eef0ff;
+            color: #4b56b8;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .small-btn:hover {
+            background: #e2e6ff;
+        }
+
+        .resume-frame {
+            width: 100%;
+            height: 420px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-top: 12px;
+            background: #fff;
+        }
+
+        .resume-text {
+            max-height: 240px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 12px;
+            line-height: 1.7;
+            color: #444;
+            background: #f7f8fc;
+            padding: 14px;
+            border-radius: 8px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        #tdApplications {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #tdApplications th,
+        #tdApplications td {
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 13px;
+            border-bottom: 1px solid #eee;
+        }
+
+        @media (max-width: 600px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -747,6 +860,54 @@
         </div>
     </div>
 
+    <!-- 候选人详情弹窗 -->
+    <div id="talentModal" class="modal">
+        <div class="modal-content talent-detail">
+            <div class="modal-header">
+                <h2 id="tdName">候选人详情</h2>
+                <button class="modal-close" onclick="closeTalentModal()">✕</button>
+            </div>
+
+            <div class="detail-grid">
+                <div><div class="detail-label">邮箱</div><div class="detail-value" id="tdEmail">-</div></div>
+                <div><div class="detail-label">电话</div><div class="detail-value" id="tdPhone">-</div></div>
+                <div><div class="detail-label">岗位方向</div><div class="detail-value" id="tdPosition">-</div></div>
+                <div><div class="detail-label">经验</div><div class="detail-value" id="tdExperience">-</div></div>
+                <div><div class="detail-label">状态</div><div class="detail-value" id="tdStatus">-</div></div>
+                <div><div class="detail-label">入库时间</div><div class="detail-value" id="tdCreatedAt">-</div></div>
+            </div>
+            <div id="tdTags" class="detail-tags"></div>
+
+            <h3 class="detail-section-title">🤖 AI 分析</h3>
+            <div id="tdAnalysis" class="detail-text">-</div>
+
+            <h3 class="detail-section-title">📎 附件简历</h3>
+            <div id="tdAttachmentBox">
+                <div class="attachment-row">
+                    <span id="tdAttachName" class="attachment-name">-</span>
+                    <button class="small-btn" onclick="toggleResumePreview()">预览</button>
+                    <button class="small-btn" onclick="downloadResume()">下载</button>
+                </div>
+                <iframe id="tdResumeFrame" class="resume-frame" style="display: none;" title="简历预览"></iframe>
+            </div>
+            <div id="tdNoAttach" class="api-hint" style="display: none;">该候选人没有附件文件，可查看下方简历文本。</div>
+
+            <h3 class="detail-section-title">📄 简历文本</h3>
+            <pre id="tdResumeText" class="resume-text"></pre>
+
+            <h3 class="detail-section-title">🗂 过往投递情况</h3>
+            <div class="table-container">
+                <table id="tdApplications">
+                    <thead>
+                        <tr><th>岗位</th><th>投递时间</th><th>状态</th><th>备注</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div id="tdNoApplications" class="api-hint" style="display: none;">暂无投递记录</div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
 window.SEED_DATA = {
@@ -765,10 +926,38 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-02 10:00:00"
+      "created_at": "2026-11-02 10:00:00",
+      "attachment": {
+        "name": "01_Zhang_Resume.pdf",
+        "size": 1497,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2NAo+PgpzdHJlYW0KeJyNkk1P4zAQhu/8ipH2Aoe6dppPTtstQRuWlqgN0mrFxZsO1GxiR44L21V//DpOi4rgkFwcWZPnfWYmHtycURJE8Hr2rYDxNQMWEkqheIS06K4mjLAYosTvioo1nP/acPkED+dLbLc1whf2cHEBxfOhfHztAaOfEYKQhIkj5Bsl8RLYJKb9w04Ah+qJTyhz1WnNRXUJ/7rYr/iX102FpFT1u1CrzT4JDa029XrM1f1sWmR3iyGyYRiTuI8vVAP3UrygboXZwQhmqm62BjWsSoGyRBjDnOs/aIQdyxhu1FZLXol2mKDtM6AuKFsU6XKx+p7lkP7M02WWLmbpIFmaEC92jDl/VtoZcrmDvX2TBqWBvOJSWuU9eNSzI4lG7mT0w+CDOCG+72AjsCtulGzF7wrh0YLLA67FCksjlAQu19CWWjQGSo28uztBBmFCosgdYd/kVCqzwVPFuwa1+w4yC9fyzXHSO9Lwo6NvseHBMefaiFI03OAahHxzbLqWu5U4RVUKXkGNa8FBHROHLChg8XG4qx/Z7e1qyEb8JCBJ3/C7DXQ6e1j1MnMnM+eSP2HdlezhihsOU/v37FrRuvU1u1ctTP9d+nIKOnr8B2fdCBcKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8PC9GMSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MTEyMjA2NTAzMlopCj4+CmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA5NiAwMDAwMCBuIAowMDAwMDAwMTk5IDAwMDAwIG4gCjAwMDAwMDAyNzkgMDAwMDAgbiAKMDAwMDAwMDgxNSAwMDAwMCBuIAowMDAwMDAwOTE3IDAwMDAwIG4gCjAwMDAwMDEwMTQgMDAwMDAgbiAKMDAwMDAwMTExMSAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDkKL1Jvb3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8M0YzRUYwREM2NzcyRTE5QUFGQzg3RDA3NzI4RDREQTU+PDNGM0VGMERDNjc3MkUxOUFBRkM4N0QwNzcyOEQ0REE1Pl0KPj4Kc3RhcnR4cmVmCjExNjYKJSVFT0YK"
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-12 10:00:00",
+          "stage": "已投递",
+          "note": "等待简历筛选"
+        },
+        {
+          "job_id": 2,
+          "job_title": "新媒体运营专员",
+          "applied_at": "2026-11-14 15:00:00",
+          "stage": "面试中",
+          "note": "已完成业务一面"
+        },
+        {
+          "job_id": 3,
+          "job_title": "数据分析实习生",
+          "applied_at": "2026-11-16 09:00:00",
+          "stage": "简历通过",
+          "note": "已通过简历筛选"
+        }
+      ]
     },
     {
       "id": 2,
@@ -784,10 +973,24 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-03 10:00:00"
+      "created_at": "2026-11-03 10:00:00",
+      "attachment": {
+        "name": "02_Li_Resume.pdf",
+        "size": 1492,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ1OQo+PgpzdHJlYW0KeJyNkkFP4zAQhe/8ipH2Aoe6Tpo4CSe6JWjDtiVqg8SBizcdwGxiR44LW6k/fh2nRUVwSC62rJn3vpkXH27PKAkjeD/7WcD4xgOPEUqheIK06J4mHvFiiJKgKyo2cD4X8Hi+wnZbI/zwHy8uoHg91I5vfPDod+0hIyxx7fmLkngJ3iSm/eefCByqJwGhnqtOay6qS6jEFf7jdVMhKVX9ydECe984MgtM/V7j+n42LbK75RBSxmIS996FauBeijfUrTA7GMFM1c3WoIZ1KVCWCGNYcP0XjZDP9n6rtlrySrTDAO2QIXVG2bJIV8v1ryyH9CFPV1m6nKWDYGlC/NhpLPir0o6Qyx3s7U0alAbyiktpkffgU9+uJBq506Nfth7GCQkCJzYCm2+jZCv+VAhPVrg8yLVYYWmEksDlBtpSi8ZAqZF3byeSIUtIFLmD9UNOpTIveIp416B2fZBZcS0/GCc9I2VfGQMryw6MOddGlKLhBjcg5Adj043cReIQVSl4BTVuBAd1dBwSUOjFx+Wuf2fz+XpIIkESkqQf+FMCHc4e1j3MwsEsuOTPWHcle7jmhsPU/j27VrQuvmb3roXp+9K3U6Ejx398CQWTCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYS1Cb2xkCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNiAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYQovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjcgMCBvYmoKPDwKL0ZvbnQgPDwvRjEgNSAwIFIKL0YyIDYgMCBSPj4KL1Byb2NTZXQgWy9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUldCj4+CmVuZG9iago4IDAgb2JqCjw8Ci9DcmVhdGlvbkRhdGUgKEQ6MjAyNjExMjIwNjUwMzJaKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwOTYgMDAwMDAgbiAKMDAwMDAwMDE5OSAwMDAwMCBuIAowMDAwMDAwMjc5IDAwMDAwIG4gCjAwMDAwMDA4MTAgMDAwMDAgbiAKMDAwMDAwMDkxMiAwMDAwMCBuIAowMDAwMDAxMDA5IDAwMDAwIG4gCjAwMDAwMDExMDYgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA5Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPDg0QUJGQTVGNEU0NjhBN0M5NTY1NDk0NDg2NjY5MUMzPjw4NEFCRkE1RjRFNDY4QTdDOTU2NTQ5NDQ4NjY2OTFDMz5dCj4+CnN0YXJ0eHJlZgoxMTYxCiUlRU9GCg=="
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-13 10:01:00",
+          "stage": "简历通过",
+          "note": "已通过简历筛选"
+        }
+      ]
     },
     {
       "id": 3,
@@ -803,10 +1006,31 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-04 10:00:00"
+      "created_at": "2026-11-04 10:00:00",
+      "attachment": {
+        "name": "03_Wang_Resume.pdf",
+        "size": 1496,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2Mwo+PgpzdHJlYW0KeJyNkk1P4zAQhu/8ipH2Aoe6dj6chNN2S9CGpSVqgnYPXLypAbOJHTkupVJ//DpOi4rgkFwcWZPnfWYmHtycYRRGsD37UcL0mgChCGMoHyEt+yufIBJDlAR9UbmG899MPsHD+Yp3m4bDN//h4gLKl0P19NoDgr8ChBTRxAHyZyX5JRA/xsPjnwAO1X6AMHHVacNEfQlbm/qdv7GmrTmqVPMh00qTLzKplcbeQLm6n8/K7G45xpXSGMVDeqlauJfiletOmB1MYK6admO4hqISXFYcprBg+h83wk5lCjdqoyWrRTdO0LYZYheULct0tSx+Zjmkf/J0laXLeTpKFifIix1jwV6UdoZM7mBv36Th0kBeMymt8h487NmRRBN3Evxp7mGcoCBwsAnYDbdKduJvzeHRgqsDruM1r4xQEphcQ1dp0RqoNGf93QkypAmKInfQocmZVOaZnyretVy77yCzcC3fHf3BEdPPjoHF0oNjzrQRlWiZ4WsQ8t2x7VvuV+IUVSVYDQ1fCwbqmDhmQSGJj8MtfmW3t8WYjQRJiJKh4Q8b6HX2UAwyCyezYJI98aYv2cMVMwxm9u/ZdaJz62t3Wy3M8F36ego6evwHfIAHRQplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+PgplbmRvYmoKOCAwIG9iago8PAovQ3JlYXRpb25EYXRlIChEOjIwMjYxMTIyMDY1MDMyWikKPj4KZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDk2IDAwMDAwIG4gCjAwMDAwMDAxOTkgMDAwMDAgbiAKMDAwMDAwMDI3OSAwMDAwMCBuIAowMDAwMDAwODE0IDAwMDAwIG4gCjAwMDAwMDA5MTYgMDAwMDAgbiAKMDAwMDAwMTAxMyAwMDAwMCBuIAowMDAwMDAxMTEwIDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOQovUm9vdCAyIDAgUgovSW5mbyA4IDAgUgovSUQgWzxCMzU2MDBFOUNEODE4NUVCMjZEQUE3Q0IwM0RFMDhCNj48QjM1NjAwRTlDRDgxODVFQjI2REFBN0NCMDNERTA4QjY+XQo+PgpzdGFydHhyZWYKMTE2NQolJUVPRgo="
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-14 10:02:00",
+          "stage": "面试中",
+          "note": "已完成业务一面"
+        },
+        {
+          "job_id": 2,
+          "job_title": "新媒体运营专员",
+          "applied_at": "2026-11-16 15:02:00",
+          "stage": "未通过",
+          "note": "岗位方向不完全匹配"
+        }
+      ]
     },
     {
       "id": 4,
@@ -822,10 +1046,24 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-05 10:00:00"
+      "created_at": "2026-11-05 10:00:00",
+      "attachment": {
+        "name": "04_Liu_Resume.pdf",
+        "size": 1494,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2MQo+PgpzdHJlYW0KeJyNkkFP4zAQhe/8ipH2Aoe6dpo4CSe6JWjDtiVqgsSBizc1YDaxI8eBrdQfv47ToiI4JBdb1sx738yLB7dnGAUhvJ/9LGB6Q4BQhDEUT5AU/dOMIBJBGPt9UbGF86Xo4PF8w9uu5vDDf7y4gOL1UDy98YDg7/oDimjs+rMXJfklkFmEh88/EThUz3yEiatOaiaqS6hEd8X/sbqpOCpV/cnSIpNvLKlFxt4gcn2/mBfp3XoMKqURigbzQjVwL8Ub160wO5jAQtVNZ7iGvBRclhymsGL6LzdCPtv7req0ZJVoxwHaKQPsjNJ1kWzW+a80g+QhSzZpsl4ko2BxjLzIaazYq9KOkMkd7O1NGi4NZBWT0iLvwcOeXUk4cSfBX9YeRDHyfSc2ARtwo2Qr/lQcnqxweZBrecVLI5QEJrfQllo0BkrNWf92IhnQGIWhO+gw5Fwq88JPEe8arl0fpFZcyw/G2cCI6VdG38rSA2PGtBGlaJjhWxDyg7HpR+4jcYiqFKyCmm8FA3V0HBNQQKLjcvPf6XKZj0nEjwMUDwN/SqDH2UM+wKwczIpJ9szrvmQP18wwmNu/Z9eK1sXX7N61MENf8nYqdOT4D8DwBoEKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8PC9GMSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MTEyMjA2NTAzMlopCj4+CmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA5NiAwMDAwMCBuIAowMDAwMDAwMTk5IDAwMDAwIG4gCjAwMDAwMDAyNzkgMDAwMDAgbiAKMDAwMDAwMDgxMiAwMDAwMCBuIAowMDAwMDAwOTE0IDAwMDAwIG4gCjAwMDAwMDEwMTEgMDAwMDAgbiAKMDAwMDAwMTEwOCAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDkKL1Jvb3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8MDEyRDMyNkJBRDQ5OTRFQTBDM0U3QUVGMTcyQUYyNDY+PDAxMkQzMjZCQUQ0OTk0RUEwQzNFN0FFRjE3MkFGMjQ2Pl0KPj4Kc3RhcnR4cmVmCjExNjMKJSVFT0YK"
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-15 10:03:00",
+          "stage": "已录用",
+          "note": "已发放口头 offer"
+        }
+      ]
     },
     {
       "id": 5,
@@ -841,10 +1079,31 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-06 10:00:00"
+      "created_at": "2026-11-06 10:00:00",
+      "attachment": {
+        "name": "05_Chen_Resume.pdf",
+        "size": 1494,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2MQo+PgpzdHJlYW0KeJyNkk1P4zAQhu/8ipH2Aoe6dppPTnRL0IalJWqDxIGLNx2o2cSOHBe2Un/8Ok6LiuCQXGxZ4+d9xhMPbs8oCSJ4P/tZwPiGAQsJpVA8Q1p0RxNGWAxR4ndFxRrOZxuU8HS+xHZbI/wIni4uoHg9VI9vPGD0O0AQkjBxgHyjJF4Cm8S0/4ITwKF64hPKXHVac1FdQmlTr/Afr5sKSanqT5lWmn2TGVpp6vWU64fZtMjuF0NcwzAmcZ9eqAYepHhD3QqzgxHMVN1sDWpYlQJliTCGOdd/0Qj5Yve3aqslr0Q7TNC2GVAXlC2KdLlY/cpySB/zdJmli1k6SJYmxIsdY85flXaGXO5gb3fSoDSQV1xKq7wHj3r2SaKRWxn98u5BnBDfd7AR2Ak3SrbiT4XwbMHlAddihaURSgKXa2hLLRoDpUbenZ0ggzAhUeSWsG9yKpXZ4KnifYPa3YPMwrX8cJz0jjT86uhbbHhwzLk2ohQNN7gGIT8cm67lbiROUZWCV1DjWnBQx8QhAwpYfHzc1e/s7m41ZCJ+EpCkb/jTBDqdPax6mbmTmXPJX7DuSvZwzQ2Hqf17dq1o3fia3bsWpr+Xvp2Cjh7/ASZCBysKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8PC9GMSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MTEyMjA2NTAzMlopCj4+CmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA5NiAwMDAwMCBuIAowMDAwMDAwMTk5IDAwMDAwIG4gCjAwMDAwMDAyNzkgMDAwMDAgbiAKMDAwMDAwMDgxMiAwMDAwMCBuIAowMDAwMDAwOTE0IDAwMDAwIG4gCjAwMDAwMDEwMTEgMDAwMDAgbiAKMDAwMDAwMTEwOCAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDkKL1Jvb3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8NkM4MjgwQzkzRUUzNzM0OUI5MjE3NUZGRTZBNjkwMjQ+PDZDODI4MEM5M0VFMzczNDlCOTIxNzVGRkU2QTY5MDI0Pl0KPj4Kc3RhcnR4cmVmCjExNjMKJSVFT0YK"
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-16 10:04:00",
+          "stage": "未通过",
+          "note": "岗位方向不完全匹配"
+        },
+        {
+          "job_id": 2,
+          "job_title": "新媒体运营专员",
+          "applied_at": "2026-11-18 15:04:00",
+          "stage": "简历通过",
+          "note": "已通过简历筛选"
+        }
+      ]
     },
     {
       "id": 6,
@@ -860,10 +1119,31 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-07 10:00:00"
+      "created_at": "2026-11-07 10:00:00",
+      "attachment": {
+        "name": "06_Zhao_Resume.pdf",
+        "size": 1496,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2Mwo+PgpzdHJlYW0KeJyNkkFP4zAQhe/8ipH2Aoe6dpo4CSe6JWjD0hI1QVohLt7UULOJHTku0FV//DpOi4q2h/hiyxq/9808e3B7hlEQwvvZ9wLGNwQIRRhD8QxJ0V1NCCIRhLHfFRUrOH9cMwVP50vebmoO3+jTxQUUr/vq8Y0HBJ8SCCiisRPI1krySyCTCPeLHgnsqyc+wsRVJzUT1SX8ta5X/IPVTcVRqeovnhaanPCkFhp7vcr1w2xapPeLIayURijq3QvVwIMUb1y3wmxhBDNVNxvDNeSl4LLkMIY503+4EfLFnm/VRktWiXYYoG0zwM4oXRTJcpH/SDNIfmXJMk0Ws2QQLI6RFzmNOXtV2hEyuYWdPUnDpYGsYlJa5B142LMjCUduJ/i/uQdRjHzfiY3AJtwo2YrfFYdnK1zu5Vpe8dIIJYHJFbSlFo2BUnPW3R1JBjRGYeg22jc5lcqs+THifcO1ewepFdfyk3HSM574G4FvZemeMWPaiFI0zPAVCPnJ2HQtd5E4RFUKVkHNV4KBOjgOCSgg0WG4+c/07i4fkogfByjuG/6SQIezg7yHmTuYOZPshdddyQ6umWEwtb9n24rWxdds37Uw/bvk7VjowPEPsdUHVQplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+PgplbmRvYmoKOCAwIG9iago8PAovQ3JlYXRpb25EYXRlIChEOjIwMjYxMTIyMDY1MDMyWikKPj4KZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDk2IDAwMDAwIG4gCjAwMDAwMDAxOTkgMDAwMDAgbiAKMDAwMDAwMDI3OSAwMDAwMCBuIAowMDAwMDAwODE0IDAwMDAwIG4gCjAwMDAwMDA5MTYgMDAwMDAgbiAKMDAwMDAwMTAxMyAwMDAwMCBuIAowMDAwMDAxMTEwIDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOQovUm9vdCAyIDAgUgovSW5mbyA4IDAgUgovSUQgWzw1ODNBMjNFOEE3OUE2MDkxNkNBODU0MkVDN0VENTU3Qz48NTgzQTIzRThBNzlBNjA5MTZDQTg1NDJFQzdFRDU1N0M+XQo+PgpzdGFydHhyZWYKMTE2NQolJUVPRgo="
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-17 10:05:00",
+          "stage": "已投递",
+          "note": "等待简历筛选"
+        },
+        {
+          "job_id": 3,
+          "job_title": "数据分析实习生",
+          "applied_at": "2026-11-16 09:05:00",
+          "stage": "简历通过",
+          "note": "已通过简历筛选"
+        }
+      ]
     },
     {
       "id": 7,
@@ -879,10 +1159,31 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-08 10:00:00"
+      "created_at": "2026-11-08 10:00:00",
+      "attachment": {
+        "name": "07_Lin_Resume.pdf",
+        "size": 1494,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2MQo+PgpzdHJlYW0KeJyNkk1P4zAQhu/8ipH2Aoe6dppPTnRL0IZtS9QEiQMXbzqA2cSOHBeo1B+/jtOuiuBQX2yNZt55Zl57cHtGSRDB+9nPEsY3DFhIKIXyCdKyD00YYTFEid8nlWs4nwsJj+cr7DYNwo/o8eICytd98vjGA0a/qw9CEiauPn9REi+BTWI6nOhIYJ898QllLjttuKgvoRbyCj9409ZIKtV8ammR2TctQ4tMvUHk+n42LbO75SmoYRiTeGheqhbupXhD3QmzhRHMVNNuDGooKoGyQhjDguu/aIR8tu9btdGS16I7DdBOGVDXKFuW6WpZ/MpySB/ydJWly1l6EixNiBc7jQV/VdoRcrmFnX1Jg9JAXnMpLfIOPOrZlUQjdzP6Ze1BnBDfd2IjsAa3SnbiT43wZIWrvVyHNVZGKAlcrqGrtGgNVBp5HzuSDMKERJG7wmHIqVTmBY8R71rUrg4yK67lf8bJwEjDr4y+lQ33jDnXRlSi5QbXYL/lgbHtR+4tcYiqEryGBteCgzp0PMWggMWH5Ra/s/m8OMURPwlIMgz8yYEeZwfFALNwMAsu+TM2fcoOrrnhMLW/Z9uJztnXbt+1MENd+nYsdOD4B6bKBnkKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8PC9GMSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MTEyMjA2NTAzMlopCj4+CmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA5NiAwMDAwMCBuIAowMDAwMDAwMTk5IDAwMDAwIG4gCjAwMDAwMDAyNzkgMDAwMDAgbiAKMDAwMDAwMDgxMiAwMDAwMCBuIAowMDAwMDAwOTE0IDAwMDAwIG4gCjAwMDAwMDEwMTEgMDAwMDAgbiAKMDAwMDAwMTEwOCAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDkKL1Jvb3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8MDI4MjJCODZBRTJEMUY3MEM2NDQ1MzA4MUI5MUQ3QzU+PDAyODIyQjg2QUUyRDFGNzBDNjQ0NTMwODFCOTFEN0M1Pl0KPj4Kc3RhcnR4cmVmCjExNjMKJSVFT0YK"
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-18 10:06:00",
+          "stage": "简历通过",
+          "note": "已通过简历筛选"
+        },
+        {
+          "job_id": 2,
+          "job_title": "新媒体运营专员",
+          "applied_at": "2026-11-20 15:06:00",
+          "stage": "已录用",
+          "note": "已发放口头 offer"
+        }
+      ]
     },
     {
       "id": 8,
@@ -898,10 +1199,24 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-09 10:00:00"
+      "created_at": "2026-11-09 10:00:00",
+      "attachment": {
+        "name": "08_Sun_Resume.pdf",
+        "size": 1494,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2MQo+PgpzdHJlYW0KeJyNkk9P4zAQxe98ipH2Aoe6dpq/nLZbgjYsLVETpD1w8aYDmE3syHFhK/XDr+O0qAgOycWWNfPeb+bFg5szSoII3s5+lDC9ZsBCQimUj5CW/dOMERZDlPh9UbmB82Ir4eF8jd22QfgWP1xcQPlyKJ5ee8DoV/1BSMLE9efPSuIlsFlMhy8+EThUz3xCmatOGy7qS+i28jv+401bI6lU88HSIrMvLEOLTL1B5Op+MS+zu9UY1DCMSTyYl6qFeyleUXfC7GACC9W0W4MaikqgrBCmsOT6Lxohn+z9Rm215LXoxgHaKQPqjLJVma5Xxc8sh/R3nq6zdLVIR8HShHix01jyF6UdIZc72NubNCgN5DWX0iLvwaOeXUk0cSejn9YexAnxfSc2ARtwq2Qn/tQIj1a4Osh1WGNlhJLA5Qa6SovWQKWR928nkkGYkChyRzgMOZfKPOMp4l2L2vVBZsW1fGecDYw0/MzoW9nwwJhzbUQlWm5wA0K+M7b9yH0kDlFVgtfQ4EZwUEfHMQEFLD4ut/iV3d4WYxLxk4Akw8AfEuhx9lAMMEsHs+SSP2HTl+zhihsOc/v37DrRufja3ZsWZuhLX0+Fjhz/AStrBqEKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8PC9GMSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MTEyMjA2NTAzMlopCj4+CmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA5NiAwMDAwMCBuIAowMDAwMDAwMTk5IDAwMDAwIG4gCjAwMDAwMDAyNzkgMDAwMDAgbiAKMDAwMDAwMDgxMiAwMDAwMCBuIAowMDAwMDAwOTE0IDAwMDAwIG4gCjAwMDAwMDEwMTEgMDAwMDAgbiAKMDAwMDAwMTEwOCAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDkKL1Jvb3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8RjZCNUFBMzc3MTREQUFFQUJDMDgwN0UxNUNEMDkxRkU+PEY2QjVBQTM3NzE0REFBRUFCQzA4MDdFMTVDRDA5MUZFPl0KPj4Kc3RhcnR4cmVmCjExNjMKJSVFT0YK"
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-19 10:07:00",
+          "stage": "面试中",
+          "note": "已完成业务一面"
+        }
+      ]
     },
     {
       "id": 9,
@@ -917,10 +1232,31 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-10 10:00:00"
+      "created_at": "2026-11-10 10:00:00",
+      "attachment": {
+        "name": "09_Qian_Resume.pdf",
+        "size": 1495,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2Mgo+PgpzdHJlYW0KeJyNksFO4zAQhu88xUh7gUNdO03ShBPdErRhack2QdoDF5MOYDaxs44LW6kPv47ToiI4JBdb1vj7v/HEg+sTSoIpvJ18L2B8xYCFhFIoHiEpuqMJIyyCaex3RcUaTn8JLuH+dIXtpkb4Ft+fnUHxsq8eX3nA6FeAICRh7ADZs5J4DmwS0f6LjwD76olPKHPVSc1FdQ5/beoF/uN1UyEpVf0h00qzLzJDK029nnJ5N58V6e1yiGsYRiTq0wvVwJ0Ur6hbYbYwgrmqm41BDXkpUJYIY1hw/QeNkE92f602WvJKtMMEbZsBdUHpskhWy/xHmkHyO0tWabKcJ4NkaUy8yDEW/EVpZ8jlFnZ2Jw1KA1nFpbTKO/CoZ59kOnIro5/ePYhi4vsONgI74UbJVjxUCI8WXO5xLVZYGqEkcLmGttSiMVBq5N3ZETIIYzKduiXsm5xJZZ7xWPG2Qe3uQWrhWr47TnpHGn529C023DtmXBtRioYbXIOQ745N13I3EqeoSsErqHEtOKhD4pABBSw6PG7+M725yYdMxI8DEvcNf5hAp7ODvJdZOJkFl/wJ665kB5fccJjZv2fbitaNr9m+aWH6e8nrMejg8R+KQAdJCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYS1Cb2xkCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNiAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYQovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjcgMCBvYmoKPDwKL0ZvbnQgPDwvRjEgNSAwIFIKL0YyIDYgMCBSPj4KL1Byb2NTZXQgWy9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUldCj4+CmVuZG9iago4IDAgb2JqCjw8Ci9DcmVhdGlvbkRhdGUgKEQ6MjAyNjExMjIwNjUwMzJaKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwOTYgMDAwMDAgbiAKMDAwMDAwMDE5OSAwMDAwMCBuIAowMDAwMDAwMjc5IDAwMDAwIG4gCjAwMDAwMDA4MTMgMDAwMDAgbiAKMDAwMDAwMDkxNSAwMDAwMCBuIAowMDAwMDAxMDEyIDAwMDAwIG4gCjAwMDAwMDExMDkgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA5Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPEMxNjU3MTM0NDJEMENDMTI4MTJCMzlERDQ1QjUyOTY0PjxDMTY1NzEzNDQyRDBDQzEyODEyQjM5REQ0NUI1Mjk2ND5dCj4+CnN0YXJ0eHJlZgoxMTY0CiUlRU9GCg=="
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-20 10:08:00",
+          "stage": "已录用",
+          "note": "已发放口头 offer"
+        },
+        {
+          "job_id": 2,
+          "job_title": "新媒体运营专员",
+          "applied_at": "2026-11-15 15:08:00",
+          "stage": "已投递",
+          "note": "等待简历筛选"
+        }
+      ]
     },
     {
       "id": 10,
@@ -936,10 +1272,24 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-11 10:00:00"
+      "created_at": "2026-11-11 10:00:00",
+      "attachment": {
+        "name": "10_Xu_Resume.pdf",
+        "size": 1493,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2MAo+PgpzdHJlYW0KeJyNkkFP4zAQhe/8ipH2Aoe6dpo4CaftlqANS0vUBIkDF29qwGxiR44DVOqPx3FaVLQ9JBdb1sx738yLBzdnGAUhvJ/9KmB6TYBQhDEUT5AU/dOMIBJBGPt9UbGB84cOHs/XvO1qDj8Ifry4gOJ1Xzy99oDgU/0BRTR2/dmLkvwSyCzC7iP4SGBfPfMRJq46qZmoLuGj+8k/WN1UHJWq/uZoickJR2qJsTdoXN0v5kV6txpDSmmEosG7UA3cS/HGdSvMFiawUHXTGa4hLwWXJYcpLJn+x42Qz/Z+ozotWSXacYB2yAA7o3RVJOtV/jvNIHnIknWarBbJKFgcIy9yGkv2qrQjZHILO3uThksDWcWktMg78LBnVxJO3Hli60EUI993YhOwATdKtuJvxeHJCpd7uZZXvDRCSWByA22pRWOg1Jz1b0eSAY1RGLqDDkPOpTIv/BjxruHa9UFqxbX8YpwNjJj+z+hbWbpnzJg2ohQNM3wDQn4xNv3IfSQOUZWCVVDzjWCgDo5jAgpIdFhu/ie9vc3HJOLHAYqHgb8l0OPsIB9glg5mySR75nVfsoMrZhjM7d+zbUXr4mu271qYoS95OxY6cHwCygEF8QplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+PgplbmRvYmoKOCAwIG9iago8PAovQ3JlYXRpb25EYXRlIChEOjIwMjYxMTIyMDY1MDMyWikKPj4KZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDk2IDAwMDAwIG4gCjAwMDAwMDAxOTkgMDAwMDAgbiAKMDAwMDAwMDI3OSAwMDAwMCBuIAowMDAwMDAwODExIDAwMDAwIG4gCjAwMDAwMDA5MTMgMDAwMDAgbiAKMDAwMDAwMTAxMCAwMDAwMCBuIAowMDAwMDAxMTA3IDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOQovUm9vdCAyIDAgUgovSW5mbyA4IDAgUgovSUQgWzw3NjY3NDRDRUYxQTE2MTM1MEM0MDQ2ODQzODMyOUU2Qj48NzY2NzQ0Q0VGMUExNjEzNTBDNDA0Njg0MzgzMjlFNkI+XQo+PgpzdGFydHhyZWYKMTE2MgolJUVPRgo="
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-12 10:09:00",
+          "stage": "未通过",
+          "note": "岗位方向不完全匹配"
+        }
+      ]
     },
     {
       "id": 11,
@@ -955,10 +1305,38 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-12 10:00:00"
+      "created_at": "2026-11-12 10:00:00",
+      "attachment": {
+        "name": "11_Zeng_Resume.pdf",
+        "size": 1496,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2Mwo+PgpzdHJlYW0KeJyNkk1P4zAQhu/8ipH2Aoe6dppPTnRL0IalJWqDtEJcvOkAZhM7clzYrvrj13FaVASH5OLImjzvMzPx4PqEkiCCt5PvBYyvGLCQUArFI6RFdzVhhMUQJX5XVKzh9B7lEzycLrHd1AjfGHs4O4PiZV8+vvKA0a8IQUjCxBHyZyXxHNgkpu5h7Aiwr574hDJXndZcVOfwz8Ze4F9eNxWSUtUfMq01+yIztNbU6ymXd7Npkd0uhriGYUziPr1QDdxJ8Yq6FWYLI5iputkY1LAqBcoSYQxzrv+gEXYsY7hWGy15JdphgrbNgLqgbFGky8XqR5ZD+itPl1m6mKWDZGlCvNgx5vxFaWfI5RZ29k0alAbyiktplXfgUc+OJBq5k9FPcw/ihPi+g43ArrhRshW/K4RHCy73uBYrLI1QErhcQ1tq0RgoNfLu7ggZhAmJIneEfZNTqcwzHiveNqjdd5BZuJbvjpPekYafHX2LDfeOOddGlKLhBtcg5Ltj07XcrcQpqlLwCmpcCw7qkDhkQQGLD8Nd/cxublZDNuInAUn6hj9soNPZwaqXmTuZOZf8CeuuZAeX3HCY2r9n24rWra/Zvmlh+u/S12PQweM/W1cHgQplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+PgplbmRvYmoKOCAwIG9iago8PAovQ3JlYXRpb25EYXRlIChEOjIwMjYxMTIyMDY1MDMyWikKPj4KZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDk2IDAwMDAwIG4gCjAwMDAwMDAxOTkgMDAwMDAgbiAKMDAwMDAwMDI3OSAwMDAwMCBuIAowMDAwMDAwODE0IDAwMDAwIG4gCjAwMDAwMDA5MTYgMDAwMDAgbiAKMDAwMDAwMTAxMyAwMDAwMCBuIAowMDAwMDAxMTEwIDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOQovUm9vdCAyIDAgUgovSW5mbyA4IDAgUgovSUQgWzw1QTUzNTFFMzlFRTc1QkYyNTlERkI2M0ZBRTkyREU3QT48NUE1MzUxRTM5RUU3NUJGMjU5REZCNjNGQUU5MkRFN0E+XQo+PgpzdGFydHhyZWYKMTE2NQolJUVPRgo="
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-13 10:10:00",
+          "stage": "已投递",
+          "note": "等待简历筛选"
+        },
+        {
+          "job_id": 2,
+          "job_title": "新媒体运营专员",
+          "applied_at": "2026-11-17 15:10:00",
+          "stage": "面试中",
+          "note": "已完成业务一面"
+        },
+        {
+          "job_id": 3,
+          "job_title": "数据分析实习生",
+          "applied_at": "2026-11-16 09:10:00",
+          "stage": "简历通过",
+          "note": "已通过简历筛选"
+        }
+      ]
     },
     {
       "id": 12,
@@ -974,10 +1352,24 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-13 10:00:00"
+      "created_at": "2026-11-13 10:00:00",
+      "attachment": {
+        "name": "12_Fang_Resume.pdf",
+        "size": 1496,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2Mwo+PgpzdHJlYW0KeJyNkk1P4zAQhu/8ipH2Aoe6dppPTtstqTYsLVEbpD1w8aZTMJvYkePCVuqPX8dpUREckosja/K8z8zEg9sLSoII3i5+FDCeM2AhoRSKLaRFdzVhhMUQJX5XVGzgcs7lEzxerrDd1QjfmPd4dQXFy7F8PPeA0a8IQUjCxBHyZyXxGtgkpu5h3hngWD3xCWWuOq25qK5ha2O/4z9eNxWSUtUfMq01+yIztNbU6yk3D7Npkd0vh7iGYUziPr1QDTxI8Yq6FWYPI5iputkZ1LAuBcoSYQwLrv+iEXYsY7hVOy15JdphgrbNgLqgbFmkq+X6Z5ZD+jtPV1m6nKWDZGlCvNgxFvxFaWfI5R4O9k0alAbyiktplQ/gUc+OJBq5k9FPcw/ihPi+g43ArrhRshV/KoStBZdHXIsVlkYoCVxuoC21aAyUGnl3d4YMwoREkTvCvsmpVOYZzxXvG9TuO8gsXMt3x0nvSMPPjr7FhkfHnGsjStFwgxsQ8t2x6VruVuIUVSl4BTVuBAd1ShyyoIDFp+Guf2V3d+shG/GTgCR9wx820OkcYN3LLJzMgkv+hHVXcoAbbjhM7d+zb0Xr1tfs37Qw/Xfp6zno5PEfwpEHUwplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+PgplbmRvYmoKOCAwIG9iago8PAovQ3JlYXRpb25EYXRlIChEOjIwMjYxMTIyMDY1MDMyWikKPj4KZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDk2IDAwMDAwIG4gCjAwMDAwMDAxOTkgMDAwMDAgbiAKMDAwMDAwMDI3OSAwMDAwMCBuIAowMDAwMDAwODE0IDAwMDAwIG4gCjAwMDAwMDA5MTYgMDAwMDAgbiAKMDAwMDAwMTAxMyAwMDAwMCBuIAowMDAwMDAxMTEwIDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOQovUm9vdCAyIDAgUgovSW5mbyA4IDAgUgovSUQgWzxDNURDNjA0QzgxMkQ2RDdDNTRGQjAyOTYxRkM4QkI3Rj48QzVEQzYwNEM4MTJENkQ3QzU0RkIwMjk2MUZDOEJCN0Y+XQo+PgpzdGFydHhyZWYKMTE2NQolJUVPRgo="
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-14 10:11:00",
+          "stage": "简历通过",
+          "note": "已通过简历筛选"
+        }
+      ]
     },
     {
       "id": 13,
@@ -993,10 +1385,31 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-14 10:00:00"
+      "created_at": "2026-11-14 10:00:00",
+      "attachment": {
+        "name": "13_Kong_Resume.pdf",
+        "size": 1496,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2Mwo+PgpzdHJlYW0KeJyNkk1P4zAQhu/8ipH2Aoe6dj6chBPdErQBWqImSBy4eFMDhsSOHBe2Un/8Ok6LiuCQXBxZk+d9ZiYeXJ9gFEbwcfK7hOkVAUIRxlA+QVr2Vz5BJIYoCfqicg2nN0o+w+PpinebhsMv4j+enUH5ui+fXnlA8E+EkCKaOEL+oiQ/B+LH2D3EPwLsq/0AYeKq04aJ+hzebOwF/8eatuaoUs2XTGtNfsik1hp7A+Xyfj4rs7vlGFdKYxQP6aVq4V6Kd647YbYwgblq2o3hGopKcFlxmMKC6TduhB3LFK7VRktWi26coG0zxC4oW5bpaln8yXJIH/J0laXLeTpKFifIix1jwV6VdoZMbmFn36Th0kBeMymt8g487NmRRBN3Evxt7mGcoCBwsAnYFbdKduJvzeHJgqs9ruM1r4xQEphcQ1dp0RqoNGf93REypAmKInfQocmZVOaFHyvetVy77yCzcC0/Hf3BEdPvjoHF0r1jzrQRlWiZ4WsQ8tOx7VvuV+IUVSVYDQ1fCwbqkDhmQSGJD8MtbrLb22LMRoIkRMnQ8JcN9Do7KAaZhZNZMMmeedOX7OCSGQYz+/dsO9G59bXbDy3M8F36fgw6ePwHR3wHewplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+PgplbmRvYmoKOCAwIG9iago8PAovQ3JlYXRpb25EYXRlIChEOjIwMjYxMTIyMDY1MDMyWikKPj4KZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDk2IDAwMDAwIG4gCjAwMDAwMDAxOTkgMDAwMDAgbiAKMDAwMDAwMDI3OSAwMDAwMCBuIAowMDAwMDAwODE0IDAwMDAwIG4gCjAwMDAwMDA5MTYgMDAwMDAgbiAKMDAwMDAwMTAxMyAwMDAwMCBuIAowMDAwMDAxMTEwIDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOQovUm9vdCAyIDAgUgovSW5mbyA4IDAgUgovSUQgWzwzNjgyRjBBMUU4QjA2QTg2RTVDNjI1RkZFRDE3OEM5QT48MzY4MkYwQTFFOEIwNkE4NkU1QzYyNUZGRUQxNzhDOUE+XQo+PgpzdGFydHhyZWYKMTE2NQolJUVPRgo="
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-15 10:12:00",
+          "stage": "面试中",
+          "note": "已完成业务一面"
+        },
+        {
+          "job_id": 2,
+          "job_title": "新媒体运营专员",
+          "applied_at": "2026-11-19 15:12:00",
+          "stage": "未通过",
+          "note": "岗位方向不完全匹配"
+        }
+      ]
     },
     {
       "id": 14,
@@ -1012,10 +1425,24 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-15 10:00:00"
+      "created_at": "2026-11-15 10:00:00",
+      "attachment": {
+        "name": "14_Peng_Resume.pdf",
+        "size": 1495,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2Mgo+PgpzdHJlYW0KeJyNkk1P4zAQhu/8ipH2Aoe6dppPTtstQRuWlqgJ0h64eNMBzCZ25Liwlfrj13FaVASH5OLImjzvMzPx4OaMkiCCt7MfJUyvGbCQUArlI6RlfzVjhMUQJX5fVG7gPEf5BA/na+y2DcI35j9cXED5ciifXnvA6FeEICRhMhCelcRLYLOYuof5J4BD9cwnlLnqtOGivoTWxn7Hf7xpaySVaj5kWmv2RWZorak3UK7uF/Myu1uNcQ3DmMRDeqlauJfiFXUnzA4msFBNuzWooagEygphCkuu/6IRdixTuFFbLXktunGCts2AuqBsVabrVfEzyyH9nafrLF0t0lGyNCFe7BhL/qK0M+RyB3v7Jg1KA3nNpbTKe/CoZ0cSTdzJ6Ke5B3FCfN/BJmBX3CrZiT81wqMFVwdchzVWRigJXG6gq7RoDVQaeX93ggzChESRO8KhyblU5hlPFe9a1O47yCxcy3fH2eBIw8+OvsWGB8ecayMq0XKDGxDy3bHtW+5X4hRVJXgNDW4EB3VMHLOggMXH4Ra/stvbYsxG/CQgydDwhw30OnsoBpmlk1lyyZ+w6Uv2cMUNh7n9e3ad6Nz62t2bFmb4Ln09BR09/gMtEAdzCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYS1Cb2xkCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNiAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYQovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjcgMCBvYmoKPDwKL0ZvbnQgPDwvRjEgNSAwIFIKL0YyIDYgMCBSPj4KL1Byb2NTZXQgWy9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUldCj4+CmVuZG9iago4IDAgb2JqCjw8Ci9DcmVhdGlvbkRhdGUgKEQ6MjAyNjExMjIwNjUwMzJaKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwOTYgMDAwMDAgbiAKMDAwMDAwMDE5OSAwMDAwMCBuIAowMDAwMDAwMjc5IDAwMDAwIG4gCjAwMDAwMDA4MTMgMDAwMDAgbiAKMDAwMDAwMDkxNSAwMDAwMCBuIAowMDAwMDAxMDEyIDAwMDAwIG4gCjAwMDAwMDExMDkgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA5Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPDAzNjc2QjNENDVGREI4MEVDNTQ5NkVBQUU0NjE2NkRDPjwwMzY3NkIzRDQ1RkRCODBFQzU0OTZFQUFFNDYxNjZEQz5dCj4+CnN0YXJ0eHJlZgoxMTY0CiUlRU9GCg=="
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-16 10:13:00",
+          "stage": "已录用",
+          "note": "已发放口头 offer"
+        }
+      ]
     },
     {
       "id": 15,
@@ -1031,10 +1458,31 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-16 10:00:00"
+      "created_at": "2026-11-16 10:00:00",
+      "attachment": {
+        "name": "15_Gao_Resume.pdf",
+        "size": 1494,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2MQo+PgpzdHJlYW0KeJyNkk1P4zAQhu/8ipH2Aoe6dppPTtstYTcsLVETpD1w8aZDMZvYkeMClfrj13FaVASH5mLLGj/zjN94cHNGSRDB69mPEsbXDFhIKIXyEdKyP5owwmKIEr8vKldw/pMreDhfYrdpEL6x4OHiAsrnffX42gNGvwIEIQkTB8iflMRLYJOYuo8FR4B99cQnlLnqtOGivoQ1V9/xjTdtjaRSzYeW1pl90TK0ztQbIFf3s2mZ3S1OUQ3DmMRD81K1cC/FC+pOmC2MYKaadmNQQ1EJlBXCGOZc/0Mj5Nrub9RGS16L7jRBO2VAXaNsUabLRfEryyH9k6fLLF3M0pNkaUK82DHm/FlpZ8jlFnZ2Jw1KA3nNpbTKO/CoZ58kGrmV0U/PHsQJ8X0HG4FNuFWyE39rhEcLrva4DmusjFASuFxBV2nRGqg08v7sCBmECYkit4TDkFOpzBMeK961qN09yCxcy3fHyeBIw8+OvsWGe8ecayMq0XKDKxDy3bHtR+4jcYqqEryGBleCgzp0PCWggMWHxy1+Z7e3xSmJ+ElAkmHgDwn0OjsoBpm5k5lzydfY9CU7uOKGw9T+PdtOdC6+dvuqhRnupS/HoIPHfwcCBo8KZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8PC9GMSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MTEyMjA2NTAzMlopCj4+CmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA5NiAwMDAwMCBuIAowMDAwMDAwMTk5IDAwMDAwIG4gCjAwMDAwMDAyNzkgMDAwMDAgbiAKMDAwMDAwMDgxMiAwMDAwMCBuIAowMDAwMDAwOTE0IDAwMDAwIG4gCjAwMDAwMDEwMTEgMDAwMDAgbiAKMDAwMDAwMTEwOCAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDkKL1Jvb3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8RkUyNkNFNzc3RTEzNTg0OTMwMUNDNkEwRjQ1RUE1NzM+PEZFMjZDRTc3N0UxMzU4NDkzMDFDQzZBMEY0NUVBNTczPl0KPj4Kc3RhcnR4cmVmCjExNjMKJSVFT0YK"
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-17 10:14:00",
+          "stage": "未通过",
+          "note": "岗位方向不完全匹配"
+        },
+        {
+          "job_id": 2,
+          "job_title": "新媒体运营专员",
+          "applied_at": "2026-11-14 15:14:00",
+          "stage": "简历通过",
+          "note": "已通过简历筛选"
+        }
+      ]
     },
     {
       "id": 16,
@@ -1050,10 +1498,31 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-17 10:00:00"
+      "created_at": "2026-11-17 10:00:00",
+      "attachment": {
+        "name": "16_Jia_Resume.pdf",
+        "size": 1495,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2Mgo+PgpzdHJlYW0KeJyNksFu4jAQQO/9ipH20h4wdkhM0tOyNNWGLTSCVNpDL94wbc0mduSYdpH4+HUcqKjaA77YssZv3sw4gNkFJdEY3i5+FDC8ZcA4oRSKJ0iL7mrECIthnIRdULGGy5kU8Hi5xHZbI3xj/PHqCorNIXp4GwCjXwEiTnjiAfmLVngNbBRTvxg/ARyiRyGhzEentZDVNWyk+I7/RN1USEpdf0jpnNkXKblzpkEPuXmYTorsfnGOKucxifvkhW7gQclXNK20OxjAVNfN1qKBVSlRlQhDmAvzF61Uz+4801ujRCXb8wRdlRH1ibJFkS4Xq59ZDunvPF1m6WKaniVLExLEnjEXG228oVA72LuTsqgs5JVQyinvIaCBa8l44HdGP7U9ihMShh42ADfhRqtW/qkQnhy4POBarLC0UisQag1taWRjoTQoursTZMQTMh77jfdFTpS2L3iqeN+g8e8gc3Cj3h1HvSP9/DWi0GH5wTEXxspSNsLiGqR6d2y6kruReEVdSlFBjWv3c/Ux4zkDilh8bO7qV3Z3tzpnImESkaQv+MMEOp09rHqZuZeZCyWese5C9nAjrICJ+z27VrZ+fM3uzUjbv0tfT0FHj//57AaLCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYS1Cb2xkCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNiAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYQovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjcgMCBvYmoKPDwKL0ZvbnQgPDwvRjEgNSAwIFIKL0YyIDYgMCBSPj4KL1Byb2NTZXQgWy9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUldCj4+CmVuZG9iago4IDAgb2JqCjw8Ci9DcmVhdGlvbkRhdGUgKEQ6MjAyNjExMjIwNjUwMzJaKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwOTYgMDAwMDAgbiAKMDAwMDAwMDE5OSAwMDAwMCBuIAowMDAwMDAwMjc5IDAwMDAwIG4gCjAwMDAwMDA4MTMgMDAwMDAgbiAKMDAwMDAwMDkxNSAwMDAwMCBuIAowMDAwMDAxMDEyIDAwMDAwIG4gCjAwMDAwMDExMDkgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA5Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPDM5REM0NzU0Mzk5MDdGMDY0REY5OEQyNkI4NUExQUZGPjwzOURDNDc1NDM5OTA3RjA2NERGOThEMjZCODVBMUFGRj5dCj4+CnN0YXJ0eHJlZgoxMTY0CiUlRU9GCg=="
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-18 10:15:00",
+          "stage": "已投递",
+          "note": "等待简历筛选"
+        },
+        {
+          "job_id": 3,
+          "job_title": "数据分析实习生",
+          "applied_at": "2026-11-16 09:15:00",
+          "stage": "简历通过",
+          "note": "已通过简历筛选"
+        }
+      ]
     },
     {
       "id": 17,
@@ -1069,10 +1538,31 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-18 10:00:00"
+      "created_at": "2026-11-18 10:00:00",
+      "attachment": {
+        "name": "17_Jin_Resume.pdf",
+        "size": 1495,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2Mgo+PgpzdHJlYW0KeJyNkk1P4zAQQO/8ipH2Aoe6dppPTtstQZsuLVETpD1w8aYDuJvYkeMClfrj13HaVREc6osta/zmzYw9mF9QEkTwdvGjhPEtAxYSSqF8grTsryaMsBiixO+DyjVczoWEx8sVdtsG4RuLHq+uoNwcose3HjD6FSAISZg4QP6iJF4Dm8TULRadAA7RE59Q5qLThov6GjZCfsd33rQ1kko1H1JaZ/ZFytA6U2+A3DzMpmV2vzxHNQxjEg/JS9XCgxSvqDthdjCCmWrarUENRSVQVghjWHD9F42Qz/Y8V1steS268wRtlQF1ibJlma6Wxc8sh/R3nq6ydDlLz5KlCfFix1jwjdLOkMsd7O1JGpQG8ppLaZX34FHPtiQauZ3RT20P4oT4voONwE64VbITf2qEJwuuDrgOa6yMUBK4XENXadEaqDTy/u4EGYQJiSK3hUORU6nMC54q3reo3TvILFzL/46TwZGGnx19iw0PjjnXRlSi5QbXYP/l0bHtS+5H4hRVJXgNDa4FB3XMeM6AAhYfm1v8yu7uinMm4icBSYaCP0yg19lDMcgsnMyCS/6MTR+yhxtuOEzt79l1onPja3dvWpjhXfp6Cjp6/ANWuAanCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYS1Cb2xkCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNiAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYQovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjcgMCBvYmoKPDwKL0ZvbnQgPDwvRjEgNSAwIFIKL0YyIDYgMCBSPj4KL1Byb2NTZXQgWy9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUldCj4+CmVuZG9iago4IDAgb2JqCjw8Ci9DcmVhdGlvbkRhdGUgKEQ6MjAyNjExMjIwNjUwMzJaKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwOTYgMDAwMDAgbiAKMDAwMDAwMDE5OSAwMDAwMCBuIAowMDAwMDAwMjc5IDAwMDAwIG4gCjAwMDAwMDA4MTMgMDAwMDAgbiAKMDAwMDAwMDkxNSAwMDAwMCBuIAowMDAwMDAxMDEyIDAwMDAwIG4gCjAwMDAwMDExMDkgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA5Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPDI1MDE5Q0JGNjZDQ0JDRDg5MzQ2OTFCNjYyMzg3OURBPjwyNTAxOUNCRjY2Q0NCQ0Q4OTM0NjkxQjY2MjM4NzlEQT5dCj4+CnN0YXJ0eHJlZgoxMTY0CiUlRU9GCg=="
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-19 10:16:00",
+          "stage": "简历通过",
+          "note": "已通过简历筛选"
+        },
+        {
+          "job_id": 2,
+          "job_title": "新媒体运营专员",
+          "applied_at": "2026-11-16 15:16:00",
+          "stage": "已录用",
+          "note": "已发放口头 offer"
+        }
+      ]
     },
     {
       "id": 18,
@@ -1088,10 +1578,24 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-19 10:00:00"
+      "created_at": "2026-11-19 10:00:00",
+      "attachment": {
+        "name": "18_Lu_Resume.pdf",
+        "size": 1494,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2MQo+PgpzdHJlYW0KeJyNkkFP4zAQhe/8ipH2Aoe6dpo4CSe6JWjDtiVqgsSBizc1YDaxI8eBrdQfv47ToiI4JBdb1sx738yLB7dnGAUhvJ/9LGB6Q4BQhDEUT5AU/dOMIBJBGPt9UbGF82UHj+cb3nY1hx8kery4gOL1UDy98YDg7/oDimjs+rMXJfklkFmE3UeiE4FD9cxHmLjqpGaiuoSqu+L/WN1UHJWq/uRoick3jtQSY2/QuL5fzIv0bj2GlNIIRYN3oRq4l+KN61aYHUxgoeqmM1xDXgouSw5TWDH9lxshn+39VnVaskq04wDtkAF2Rum6SDbr/FeaQfKQJZs0WS+SUbA4Rl7kNFbsVWlHyOQO9vYmDZcGsopJaZH34GHPriScuJPgL1sPohj5vhObgA24UbIVfyoOT1a4PMi1vOKlEUoCk1toSy0aA6XmrH87kQxojMLQHXQYci6VeeGniHcN164PUiuu5QfjbGDE9Cujb2XpgTFj2ohSNMzwLQj5wdj0I/eROERVClZBzbeCgTo6jgkoINFxufnvdLnMxyTixwGKh4E/JdDj7CEfYFYOZsUke+Z1X7KHa2YYzO3fs2tF6+Jrdu9amKEveTsVOnL8B7A1BekKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8PC9GMSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MTEyMjA2NTAzMlopCj4+CmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA5NiAwMDAwMCBuIAowMDAwMDAwMTk5IDAwMDAwIG4gCjAwMDAwMDAyNzkgMDAwMDAgbiAKMDAwMDAwMDgxMiAwMDAwMCBuIAowMDAwMDAwOTE0IDAwMDAwIG4gCjAwMDAwMDEwMTEgMDAwMDAgbiAKMDAwMDAwMTEwOCAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDkKL1Jvb3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8NEZGRDUxRjg1RTI4MTkxOTI0QjA0MDZDRUMxMjM0NzQ+PDRGRkQ1MUY4NUUyODE5MTkyNEIwNDA2Q0VDMTIzNDc0Pl0KPj4Kc3RhcnR4cmVmCjExNjMKJSVFT0YK"
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-20 10:17:00",
+          "stage": "面试中",
+          "note": "已完成业务一面"
+        }
+      ]
     },
     {
       "id": 19,
@@ -1107,10 +1611,31 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-20 10:00:00"
+      "created_at": "2026-11-20 10:00:00",
+      "attachment": {
+        "name": "19_Su_Resume.pdf",
+        "size": 1493,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2MAo+PgpzdHJlYW0KeJyNkk9P4zAQxe98ipH2Aoe6dpq/nLZbgjYsLVETpD1w8aYDmE3syHFhK/XDr+O0qAgOycWWNfPeb+bFg5szSoII3s5+lDC9ZsBCQimUj5CW/dOMERZDlPh9UbmB82ILD+dr7LYNwjeWPFxcQPlyKJ5ee8DoV/1BSMLE9efPSuIlsFlM3ceSE4FD9cwnlLnqtOGivoRu+x3/8aatkVSq+eBoidkXjqElpt6gcXW/mJfZ3WoMaRjGJB68S9XCvRSvqDthdjCBhWrarUENRSVQVghTWHL9F42QT/Z+o7Za8lp04wDtkAF1RtmqTNer4meWQ/o7T9dZulqko2BpQrzYaSz5i9KOkMsd7O1NGpQG8ppLaZH34FHPriSauJPRT1sP4oT4vhObgA24VbITf2qERytcHeQ6rLEyQkngcgNdpUVroNLI+7cTySBMSBS5IxyGnEtlnvEU8a5F7fogs+JavjPOBkYafmb0rWx4YMy5NqISLTe4ASHfGdt+5D4Sh6gqwWtocCM4qKPjmIACFh+XW/zKbm+LMYn4SUCSYeAPCfQ4eygGmKWDWXLJn7DpS/ZwxQ2Huf17dp3oXHzt7k0LM/Slr6dCR47/5UMF+QplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+PgplbmRvYmoKOCAwIG9iago8PAovQ3JlYXRpb25EYXRlIChEOjIwMjYxMTIyMDY1MDMyWikKPj4KZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDk2IDAwMDAwIG4gCjAwMDAwMDAxOTkgMDAwMDAgbiAKMDAwMDAwMDI3OSAwMDAwMCBuIAowMDAwMDAwODExIDAwMDAwIG4gCjAwMDAwMDA5MTMgMDAwMDAgbiAKMDAwMDAwMTAxMCAwMDAwMCBuIAowMDAwMDAxMTA3IDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOQovUm9vdCAyIDAgUgovSW5mbyA4IDAgUgovSUQgWzw4NTEzRkYwNUE2OTcxMzY3QUVENjIyNzY1RTU0Q0Y4Mz48ODUxM0ZGMDVBNjk3MTM2N0FFRDYyMjc2NUU1NENGODM+XQo+PgpzdGFydHhyZWYKMTE2MgolJUVPRgo="
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-12 10:18:00",
+          "stage": "已录用",
+          "note": "已发放口头 offer"
+        },
+        {
+          "job_id": 2,
+          "job_title": "新媒体运营专员",
+          "applied_at": "2026-11-18 15:18:00",
+          "stage": "已投递",
+          "note": "等待简历筛选"
+        }
+      ]
     },
     {
       "id": 20,
@@ -1126,10 +1651,24 @@ window.SEED_DATA = {
         "数据分析",
         "市场营销"
       ],
-      "ai_analysis": "候选人具有0年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
+      "ai_analysis": "候选人具有1年内容策划相关经验，熟悉内容策划、新媒体运营、数据分析，具备内容选题、脚本创作与数据复盘能力。",
       "recruitment_history": [],
       "status": "available",
-      "created_at": "2026-11-21 10:00:00"
+      "created_at": "2026-11-21 10:00:00",
+      "attachment": {
+        "name": "20_He_Resume.pdf",
+        "size": 1492,
+        "data": "data:application/pdf;base64,JVBERi0xLjMKMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ1OQo+PgpzdHJlYW0KeJyNkk9P4zAQxe98ipH2Aoe6dpq/nLZbgghLS9QGaQ9cvOlAzSZ25LhApX74dZwWFcEhudiyZt77zbx4cHtGSRDB29mvAsbXDFhIKIXiCdKie5owwmKIEr8rKtZwfoPweL7Edlsj/PDo48UFFC+H4vG1B4x+1x+EJExcf75REi+BTWLqPo+eCByqJz6hzFWnNRfVJWzwJ77zuqmQlKr+5GiJ2TeOoSWmXq9x9TCbFtn9YghpGMYk7r0L1cCDFK+oW2F2MIKZqputQQ2rUqAsEcYw5/ofGiGf7f1WbbXklWiHAdohA+qMskWRLhermyyH9E+eLrN0MUsHwdKEeLHTmPMXpR0hlzvY25s0KA3kFZfSIu/Bo55dSTRyJ/u69SBOiO87sRHYgBslW/G3QniywuVBrsUKSyOUBC7X0JZaNAZKjbx7O5EMwoREkTvCfsipVGaDp4j3DWrXB5kV1/KDcdIz0vAro29lwwNjzrURpWi4wTUI+cHYdCN3kThEVQpeQY1rwUEdHYcEFLD4uNzV7+zubjUkET8JSNIP/CmBDmcPqx5m7mDmXPJnrLuSPVxxw2Fq/55dK1oXX7N708L0fenrqdCR4z/86QWzCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYS1Cb2xkCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNiAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYQovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjcgMCBvYmoKPDwKL0ZvbnQgPDwvRjEgNSAwIFIKL0YyIDYgMCBSPj4KL1Byb2NTZXQgWy9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUldCj4+CmVuZG9iago4IDAgb2JqCjw8Ci9DcmVhdGlvbkRhdGUgKEQ6MjAyNjExMjIwNjUwMzJaKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwOTYgMDAwMDAgbiAKMDAwMDAwMDE5OSAwMDAwMCBuIAowMDAwMDAwMjc5IDAwMDAwIG4gCjAwMDAwMDA4MTAgMDAwMDAgbiAKMDAwMDAwMDkxMiAwMDAwMCBuIAowMDAwMDAxMDA5IDAwMDAwIG4gCjAwMDAwMDExMDYgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA5Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPDE3OEY5N0I1MkM3OEE5NkU1REUyRjU5OTRFNEMwRjk5PjwxNzhGOTdCNTJDNzhBOTZFNURFMkY1OTk0RTRDMEY5OT5dCj4+CnN0YXJ0eHJlZgoxMTYxCiUlRU9GCg=="
+      },
+      "applications": [
+        {
+          "job_id": 1,
+          "job_title": "短视频内容策划",
+          "applied_at": "2026-11-13 10:19:00",
+          "stage": "未通过",
+          "note": "岗位方向不完全匹配"
+        }
+      ]
     }
   ],
   "jobs": [
@@ -1672,6 +2211,15 @@ ${text.slice(0, 6000)}`;
 
     // ============ 接口实现 ============
 
+    function fileToDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ''));
+            reader.onerror = () => reject(reader.error || new Error('文件读取失败'));
+            reader.readAsDataURL(file);
+        });
+    }
+
     async function readPDFText(file) {
         if (!window.pdfjsLib) {
             throw new Error('PDF解析库加载失败，请检查网络后刷新页面');
@@ -1696,6 +2244,16 @@ ${text.slice(0, 6000)}`;
         try {
             const text = await readPDFText(file);
             if (!text.trim()) return jsonResponse({ error: 'PDF提取失败或PDF为空' }, 400);
+
+            let attachment = null;
+            if (file.size && file.size <= 1.5 * 1024 * 1024) {
+                try {
+                    const data = await fileToDataURL(file);
+                    if (data) attachment = { name: file.name, size: file.size, data };
+                } catch (e) {
+                    console.warn('附件保存失败：', e);
+                }
+            }
 
             let analysis;
             let aiUsed = false;
@@ -1724,6 +2282,7 @@ ${text.slice(0, 6000)}`;
                     tags: analysis.tags,
                     career_analysis: analysis.career_analysis,
                     full_text: text,
+                    attachment: attachment,
                     ai_used: aiUsed,
                     ai_error: aiError
                 }
@@ -1780,6 +2339,8 @@ ${text.slice(0, 6000)}`;
             resume_text: resume,
             tags: a.tags,
             ai_analysis: a.career_analysis,
+            attachment: provided.attachment || null,
+            applications: [],
             recruitment_history: [],
             status: 'available',
             created_at: nowStr()
@@ -1924,6 +2485,8 @@ ${text.slice(0, 6000)}`;
     <script>
         const API_BASE = '/api';
         let currentAnalysis = null;
+        let currentTalent = null;
+        let currentAttachmentUrl = null;
         
         // 标签页切换
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -2116,13 +2679,142 @@ ${text.slice(0, 6000)}`;
             }
         }
         
+        function escapeHtml(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[ch]);
+        }
+
         function viewTalent(id) {
             fetch(`${API_BASE}/talents/${id}`)
                 .then(res => res.json())
                 .then(talent => {
-                    alert(`👤 ${talent.name}\n\n📧 ${talent.email || '-'}\n📱 ${talent.phone || '-'}\n\n💼 ${talent.position}\n📊 ${talent.experience_years}年\n\n🔍 分析:\n${talent.ai_analysis}`);
+                    if (talent.error) {
+                        alert(talent.error);
+                        return;
+                    }
+
+                    currentTalent = talent;
+                    if (currentAttachmentUrl) {
+                        URL.revokeObjectURL(currentAttachmentUrl);
+                        currentAttachmentUrl = null;
+                    }
+
+                    document.getElementById('tdName').textContent = talent.name || '候选人详情';
+                    document.getElementById('tdEmail').textContent = talent.email || '-';
+                    document.getElementById('tdPhone').textContent = talent.phone || '-';
+                    document.getElementById('tdPosition').textContent = talent.position || '-';
+                    document.getElementById('tdExperience').textContent = (talent.experience_years || 0) + ' 年';
+                    const statusMap = { available: '可推荐', placed: '已入职', archived: '已归档' };
+                    document.getElementById('tdStatus').textContent = statusMap[talent.status] || talent.status || '-';
+                    document.getElementById('tdCreatedAt').textContent = talent.created_at || '-';
+                    document.getElementById('tdAnalysis').textContent = talent.ai_analysis || '暂无分析';
+                    document.getElementById('tdResumeText').textContent = talent.resume_text || '暂无简历文本';
+
+                    document.getElementById('tdTags').innerHTML = (talent.tags || [])
+                        .map(tag => `<span class="tag">${escapeHtml(tag)}</span>`)
+                        .join('');
+
+                    const attachment = talent.attachment;
+                    const hasAttachment = !!(attachment && attachment.data);
+                    document.getElementById('tdAttachmentBox').style.display = hasAttachment ? 'block' : 'none';
+                    document.getElementById('tdNoAttach').style.display = hasAttachment ? 'none' : 'block';
+                    if (hasAttachment) {
+                        document.getElementById('tdAttachName').textContent =
+                            attachment.name || (talent.name + '_简历.pdf');
+                    }
+
+                    const frame = document.getElementById('tdResumeFrame');
+                    frame.style.display = 'none';
+                    frame.src = 'about:blank';
+
+                    renderApplications(talent.applications || []);
+                    document.getElementById('talentModal').classList.add('active');
                 })
                 .catch(err => console.error('加载详情失败:', err));
+        }
+
+        function renderApplications(apps) {
+            const table = document.getElementById('tdApplications');
+            const container = table.closest('.table-container');
+            const empty = document.getElementById('tdNoApplications');
+            const tbody = table.querySelector('tbody');
+
+            if (!apps.length) {
+                container.style.display = 'none';
+                empty.style.display = 'block';
+                tbody.innerHTML = '';
+                return;
+            }
+
+            container.style.display = 'block';
+            empty.style.display = 'none';
+            tbody.innerHTML = apps.map(app => `
+                <tr>
+                    <td>${escapeHtml(app.job_title || '-')}</td>
+                    <td>${escapeHtml(app.applied_at || '-')}</td>
+                    <td><span class="status-badge">${escapeHtml(app.stage || '已投递')}</span></td>
+                    <td>${escapeHtml(app.note || '-')}</td>
+                </tr>
+            `).join('');
+        }
+
+        function closeTalentModal() {
+            document.getElementById('talentModal').classList.remove('active');
+            const frame = document.getElementById('tdResumeFrame');
+            frame.style.display = 'none';
+            frame.src = 'about:blank';
+            if (currentAttachmentUrl) {
+                URL.revokeObjectURL(currentAttachmentUrl);
+                currentAttachmentUrl = null;
+            }
+            currentTalent = null;
+        }
+
+        function getAttachmentBlobUrl() {
+            if (currentAttachmentUrl) return currentAttachmentUrl;
+            const data = currentTalent && currentTalent.attachment && currentTalent.attachment.data;
+            if (!data) return null;
+
+            try {
+                const comma = data.indexOf(',');
+                const meta = data.slice(0, comma);
+                const base64 = data.slice(comma + 1);
+                const mime = (meta.match(/data:([^;]+)/) || [])[1] || 'application/pdf';
+                const binary = atob(base64);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                currentAttachmentUrl = URL.createObjectURL(new Blob([bytes], { type: mime }));
+                return currentAttachmentUrl;
+            } catch (err) {
+                console.error('附件解析失败:', err);
+                return null;
+            }
+        }
+
+        function toggleResumePreview() {
+            const frame = document.getElementById('tdResumeFrame');
+            if (frame.style.display === 'block') {
+                frame.style.display = 'none';
+                return;
+            }
+            const url = getAttachmentBlobUrl();
+            if (!url) return;
+            frame.src = url;
+            frame.style.display = 'block';
+        }
+
+        function downloadResume() {
+            if (!currentTalent) return;
+            const url = getAttachmentBlobUrl();
+            if (!url) return;
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = (currentTalent.attachment && currentTalent.attachment.name)
+                || (currentTalent.name + '_简历.pdf');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
         
         // 添加岗位
