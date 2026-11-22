@@ -447,7 +447,17 @@
             outline: none;
         }
 
-        .api-form input:focus {
+        .api-form select {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #fff;
+            outline: none;
+        }
+
+        .api-form input:focus,
+        .api-form select:focus {
             border-color: #667eea;
         }
 
@@ -710,13 +720,22 @@
             </div>
 
             <div class="api-form">
-                <label for="apiKeyInput">Anthropic API Key</label>
-                <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off">
+                <label for="apiProviderSelect">API 供应商</label>
+                <select id="apiProviderSelect" onchange="applyProviderDefaults()">
+                    <option value="anthropic">Anthropic（Claude）</option>
+                    <option value="openai">OpenAI 兼容接口（自定义）</option>
+                </select>
+                <label for="apiBaseUrlInput">接口地址 Base URL</label>
+                <input type="text" id="apiBaseUrlInput" placeholder="https://api.anthropic.com" autocomplete="off">
+                <label for="apiKeyInput">API Key</label>
+                <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
                 <label for="apiModelInput">模型</label>
                 <input type="text" id="apiModelInput" value="claude-sonnet-5-5" autocomplete="off">
                 <div class="api-hint">
-                    密钥只保存在当前浏览器的 localStorage，仅用于直接请求 api.anthropic.com，不会写入仓库或发送到其他服务器。<br>
-                    不要在共用电脑上保存；演示时可随时点「清除」。
+                    支持 Anthropic 和任意 OpenAI 兼容接口，例如：<br>
+                    DeepSeek <code>https://api.deepseek.com/v1</code> · Kimi <code>https://api.moonshot.cn/v1</code><br>
+                    智谱 <code>https://open.bigmodel.cn/api/paas/v4</code> · Ollama <code>http://localhost:11434/v1</code><br>
+                    接口必须允许浏览器跨域（CORS）。密钥只保存在当前浏览器，仅用于请求你填写的地址；请只使用你信任的接口。
                 </div>
                 <div class="api-actions">
                     <button onclick="saveApiConfig()">保存</button>
@@ -1155,7 +1174,10 @@ window.SEED_DATA = {
 
     const STORAGE_KEY = 'ai_talent_static_db_v1';
     const AI_CONFIG_KEY = 'ai_talent_api_config_v1';
-    const DEFAULT_MODEL = 'claude-sonnet-5-5';
+    const PROVIDERS = {
+        anthropic: { label: 'Anthropic', baseUrl: 'https://api.anthropic.com', model: 'claude-sonnet-5-5' },
+        openai: { label: 'OpenAI 兼容', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' }
+    };
     const ANTHROPIC_VERSION = '2023-06-01';
 
     if (window.pdfjsLib) {
@@ -1339,6 +1361,18 @@ window.SEED_DATA = {
         localStorage.setItem(AI_CONFIG_KEY, JSON.stringify(config));
     }
 
+    function normalizeAIConfig(config) {
+        const raw = config || {};
+        const provider = raw.provider === 'openai' ? 'openai' : 'anthropic';
+        const preset = PROVIDERS[provider];
+        return {
+            provider,
+            baseUrl: String(raw.baseUrl || preset.baseUrl).trim().replace(/\/+$/, ''),
+            apiKey: String(raw.apiKey || '').trim(),
+            model: String(raw.model || preset.model).trim()
+        };
+    }
+
     function maskKey(key) {
         if (!key) return '';
         return key.length <= 8 ? '****' : key.slice(0, 7) + '...' + key.slice(-4);
@@ -1357,21 +1391,51 @@ window.SEED_DATA = {
         btn.textContent = getAIConfig().apiKey ? '⚙️ API 已连接' : '⚙️ 接入我的 API';
     }
 
-    async function requestClaude(config, prompt, maxTokens) {
-        if (!config.apiKey) throw new Error('未配置 API Key');
-        const response = await realFetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-                'content-type': 'application/json',
-                'x-api-key': config.apiKey,
-                'anthropic-version': ANTHROPIC_VERSION,
-                'anthropic-dangerous-direct-browser-access': 'true'
-            },
-            body: JSON.stringify({
-                model: config.model || DEFAULT_MODEL,
+    function buildEndpoint(config) {
+        const base = config.baseUrl;
+        if (config.provider === 'anthropic') {
+            if (/\/messages$/.test(base)) return base;
+            if (/\/v1$/.test(base)) return base + '/messages';
+            return base + '/v1/messages';
+        }
+        if (/\/chat\/completions$/.test(base)) return base;
+        return base + '/chat/completions';
+    }
+
+    async function requestAI(config, prompt, maxTokens) {
+        const cfg = normalizeAIConfig(config);
+        if (!cfg.apiKey) throw new Error('未配置 API Key');
+        if (!cfg.model) throw new Error('未填写模型');
+
+        const isAnthropic = cfg.provider === 'anthropic';
+        const headers = { 'content-type': 'application/json' };
+        let body;
+
+        if (isAnthropic) {
+            headers['x-api-key'] = cfg.apiKey;
+            headers['anthropic-version'] = ANTHROPIC_VERSION;
+            headers['anthropic-dangerous-direct-browser-access'] = 'true';
+            body = {
+                model: cfg.model,
                 max_tokens: maxTokens || 1024,
                 messages: [{ role: 'user', content: prompt }]
-            })
+            };
+        } else {
+            headers['authorization'] = 'Bearer ' + cfg.apiKey;
+            body = {
+                model: cfg.model,
+                max_tokens: maxTokens || 1024,
+                temperature: 0.2,
+                messages: [{ role: 'user', content: prompt }]
+            };
+        }
+
+        const response = await realFetch(buildEndpoint(cfg), {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(body)
+        }).catch(() => {
+            throw new Error('网络请求失败：可能是接口未允许浏览器跨域（CORS）或被网络拦截');
         });
 
         let data = null;
@@ -1384,16 +1448,26 @@ window.SEED_DATA = {
             throw new Error(message);
         }
 
-        const text = ((data && data.content) || [])
-            .filter(block => block.type === 'text')
-            .map(block => block.text)
-            .join('\n');
-        if (!text) throw new Error('API 返回内容为空');
+        let text = '';
+        if (isAnthropic) {
+            text = ((data && data.content) || [])
+                .filter(block => block.type === 'text')
+                .map(block => block.text)
+                .join('\n');
+        } else {
+            const content = data && data.choices && data.choices[0]
+                && data.choices[0].message && data.choices[0].message.content;
+            text = Array.isArray(content)
+                ? content.map(part => part.text || '').join('')
+                : (content || '');
+        }
+
+        if (!text.trim()) throw new Error('API 返回内容为空');
         return text;
     }
 
-    function callClaude(prompt, maxTokens) {
-        return requestClaude(getAIConfig(), prompt, maxTokens);
+    function callAI(prompt, maxTokens) {
+        return requestAI(getAIConfig(), prompt, maxTokens);
     }
 
     async function analyzeResumeWithAI(text) {
@@ -1411,7 +1485,7 @@ window.SEED_DATA = {
 简历内容：
 ${text.slice(0, 6000)}`;
 
-        const raw = await callClaude(prompt, 1200);
+        const raw = await callAI(prompt, 1200);
         const start = raw.indexOf('{');
         const end = raw.lastIndexOf('}');
         if (start < 0 || end < start) throw new Error('AI 返回格式异常');
@@ -1432,15 +1506,60 @@ ${text.slice(0, 6000)}`;
         };
     }
 
-    function openApiModal() {
-        const config = getAIConfig();
+    function applyProviderDefaults() {
+        const providerSelect = document.getElementById('apiProviderSelect');
+        const baseInput = document.getElementById('apiBaseUrlInput');
+        const modelInput = document.getElementById('apiModelInput');
+        if (!providerSelect) return;
+
+        const provider = providerSelect.value === 'openai' ? 'openai' : 'anthropic';
+        const preset = PROVIDERS[provider];
+        const other = PROVIDERS[provider === 'anthropic' ? 'openai' : 'anthropic'];
+
+        if (baseInput) {
+            if (!baseInput.value || baseInput.value === other.baseUrl) {
+                baseInput.value = provider === 'openai' ? preset.baseUrl : '';
+            }
+            baseInput.placeholder = preset.baseUrl;
+        }
+        if (modelInput && (!modelInput.value || modelInput.value === other.model)) {
+            modelInput.value = preset.model;
+        }
+    }
+
+    function readApiForm() {
+        const providerSelect = document.getElementById('apiProviderSelect');
+        const baseInput = document.getElementById('apiBaseUrlInput');
         const keyInput = document.getElementById('apiKeyInput');
         const modelInput = document.getElementById('apiModelInput');
-        if (keyInput) keyInput.value = config.apiKey || '';
-        if (modelInput) modelInput.value = config.model || DEFAULT_MODEL;
+        const provider = providerSelect && providerSelect.value === 'openai' ? 'openai' : 'anthropic';
+
+        return {
+            provider,
+            baseUrl: (baseInput && baseInput.value || '').trim(),
+            apiKey: (keyInput && keyInput.value || '').trim(),
+            model: (modelInput && modelInput.value || '').trim() || PROVIDERS[provider].model
+        };
+    }
+
+    function openApiModal() {
+        const config = normalizeAIConfig(getAIConfig());
+        const providerSelect = document.getElementById('apiProviderSelect');
+        const baseInput = document.getElementById('apiBaseUrlInput');
+        const keyInput = document.getElementById('apiKeyInput');
+        const modelInput = document.getElementById('apiModelInput');
+
+        if (providerSelect) providerSelect.value = config.provider;
+        if (baseInput) {
+            baseInput.value = config.baseUrl;
+            baseInput.placeholder = PROVIDERS[config.provider].baseUrl;
+        }
+        if (keyInput) keyInput.value = config.apiKey;
+        if (modelInput) modelInput.value = config.model;
 
         setApiStatus(
-            config.apiKey ? '已保存：' + maskKey(config.apiKey) : '尚未配置，当前使用本地规则分析',
+            config.apiKey ? '已保存：' + maskKey(config.apiKey) + '（' + PROVIDERS[config.provider].label + '）'
+                : '尚未配置，当前使用本地规则分析',
             config.apiKey ? 'ok' : ''
         );
         document.getElementById('apiModal').classList.add('active');
@@ -1451,35 +1570,30 @@ ${text.slice(0, 6000)}`;
     }
 
     function saveApiConfig() {
-        const keyInput = document.getElementById('apiKeyInput');
-        const modelInput = document.getElementById('apiModelInput');
-        const apiKey = (keyInput && keyInput.value || '').trim();
-        const model = (modelInput && modelInput.value || '').trim() || DEFAULT_MODEL;
-
-        if (!apiKey) {
+        const config = readApiForm();
+        if (!config.apiKey) {
             setApiStatus('请输入 API Key', 'err');
             return;
         }
 
-        saveAIConfig({ apiKey, model });
+        saveAIConfig(config);
         updateApiButton();
-        setApiStatus('已保存：' + maskKey(apiKey) + '（仅存储在当前浏览器）', 'ok');
+        setApiStatus(
+            '已保存：' + maskKey(config.apiKey) + '（' + PROVIDERS[config.provider].label + '，仅存储在当前浏览器）',
+            'ok'
+        );
     }
 
     async function testApiConfig() {
-        const keyInput = document.getElementById('apiKeyInput');
-        const modelInput = document.getElementById('apiModelInput');
-        const apiKey = (keyInput && keyInput.value || '').trim();
-        const model = (modelInput && modelInput.value || '').trim() || DEFAULT_MODEL;
-
-        if (!apiKey) {
+        const config = readApiForm();
+        if (!config.apiKey) {
             setApiStatus('请先填写 API Key', 'err');
             return;
         }
 
         setApiStatus('正在测试连接...', '');
         try {
-            const reply = await requestClaude({ apiKey, model }, '请只回复：连接成功', 16);
+            const reply = await requestAI(config, '请只回复：连接成功', 16);
             setApiStatus('✅ 连接成功，模型回复：' + reply.trim().slice(0, 40), 'ok');
         } catch (e) {
             setApiStatus('❌ 连接失败：' + e.message, 'err');
@@ -1488,8 +1602,20 @@ ${text.slice(0, 6000)}`;
 
     function clearApiConfig() {
         localStorage.removeItem(AI_CONFIG_KEY);
+
+        const providerSelect = document.getElementById('apiProviderSelect');
+        const baseInput = document.getElementById('apiBaseUrlInput');
         const keyInput = document.getElementById('apiKeyInput');
+        const modelInput = document.getElementById('apiModelInput');
+
+        if (providerSelect) providerSelect.value = 'anthropic';
+        if (baseInput) {
+            baseInput.value = '';
+            baseInput.placeholder = PROVIDERS.anthropic.baseUrl;
+        }
         if (keyInput) keyInput.value = '';
+        if (modelInput) modelInput.value = PROVIDERS.anthropic.model;
+
         updateApiButton();
         setApiStatus('已清除，恢复本地规则分析', '');
     }
@@ -1773,6 +1899,7 @@ ${text.slice(0, 6000)}`;
     window.saveApiConfig = saveApiConfig;
     window.testApiConfig = testApiConfig;
     window.clearApiConfig = clearApiConfig;
+    window.applyProviderDefaults = applyProviderDefaults;
 
     updateApiButton();
 })();
