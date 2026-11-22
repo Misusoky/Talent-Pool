@@ -610,6 +610,139 @@
             border-bottom: 1px solid #eee;
         }
 
+        .pipeline-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .pipeline-card {
+            border: 1px solid #e8eaf5;
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .pipeline-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .pipeline-job {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .pipeline-stage-badge {
+            background: #eef0ff;
+            color: #4b56b8;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 12px;
+        }
+
+        .pipeline-date {
+            margin-left: auto;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .pipeline-steps {
+            display: flex;
+            overflow-x: auto;
+            padding-bottom: 6px;
+        }
+
+        .pipeline-step {
+            flex: 1;
+            min-width: 72px;
+            text-align: center;
+            position: relative;
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .pipeline-step .dot {
+            width: 22px;
+            height: 22px;
+            line-height: 22px;
+            border-radius: 50%;
+            background: #eef0f7;
+            color: #999;
+            margin: 0 auto 6px;
+            position: relative;
+            z-index: 1;
+            font-size: 11px;
+        }
+
+        .pipeline-step.done .dot {
+            background: #5ac18e;
+            color: #fff;
+        }
+
+        .pipeline-step.current .dot {
+            background: #667eea;
+            color: #fff;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+        }
+
+        .pipeline-step.done {
+            color: #3f9a72;
+        }
+
+        .pipeline-step.current {
+            color: #4b56b8;
+            font-weight: 600;
+        }
+
+        .pipeline-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 11px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: #e8eaf5;
+            z-index: 0;
+        }
+
+        .pipeline-step.done:not(:last-child)::after {
+            background: #5ac18e;
+        }
+
+        .pipeline-note {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .pipeline-summary-row td {
+            background: #fbfbff;
+        }
+
+        .pipeline-mini {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 2px 0;
+        }
+
+        .pipeline-mini-step {
+            font-size: 11px;
+            color: #777;
+            background: #f3f4fa;
+            border-radius: 12px;
+            padding: 3px 8px;
+        }
+
+        .pipeline-mini-step b {
+            color: #4b56b8;
+            margin-left: 2px;
+        }
+
         @media (max-width: 600px) {
             .detail-grid {
                 grid-template-columns: 1fr;
@@ -895,15 +1028,8 @@
             <h3 class="detail-section-title">📄 简历文本</h3>
             <pre id="tdResumeText" class="resume-text"></pre>
 
-            <h3 class="detail-section-title">🗂 过往投递情况</h3>
-            <div class="table-container">
-                <table id="tdApplications">
-                    <thead>
-                        <tr><th>岗位</th><th>投递时间</th><th>状态</th><th>备注</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <h3 class="detail-section-title">🗂 岗位 Pipeline 与投递情况</h3>
+            <div id="tdPipelineList" class="pipeline-list"></div>
             <div id="tdNoApplications" class="api-hint" style="display: none;">暂无投递记录</div>
         </div>
     </div>
@@ -940,22 +1066,22 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-12 10:00:00",
-          "stage": "已投递",
-          "note": "等待简历筛选"
+          "stage": "简历筛选",
+          "note": "HR 初筛中"
         },
         {
           "job_id": 2,
           "job_title": "新媒体运营专员",
-          "applied_at": "2026-11-14 15:00:00",
-          "stage": "面试中",
-          "note": "已完成业务一面"
+          "applied_at": "2026-11-14 10:00:00",
+          "stage": "笔试",
+          "note": "已安排笔试"
         },
         {
           "job_id": 3,
           "job_title": "数据分析实习生",
-          "applied_at": "2026-11-16 09:00:00",
-          "stage": "简历通过",
-          "note": "已通过简历筛选"
+          "applied_at": "2026-11-16 10:00:00",
+          "stage": "offer沟通",
+          "note": "offer 沟通中"
         }
       ]
     },
@@ -987,8 +1113,8 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-13 10:01:00",
-          "stage": "简历通过",
-          "note": "已通过简历筛选"
+          "stage": "评估",
+          "note": "待完成评估"
         }
       ]
     },
@@ -1020,15 +1146,15 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-14 10:02:00",
-          "stage": "面试中",
-          "note": "已完成业务一面"
+          "stage": "评估通过",
+          "note": "评估已通过"
         },
         {
           "job_id": 2,
           "job_title": "新媒体运营专员",
-          "applied_at": "2026-11-16 15:02:00",
-          "stage": "未通过",
-          "note": "岗位方向不完全匹配"
+          "applied_at": "2026-11-16 10:02:00",
+          "stage": "终面通过",
+          "note": "终面已通过"
         }
       ]
     },
@@ -1060,8 +1186,8 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-15 10:03:00",
-          "stage": "已录用",
-          "note": "已发放口头 offer"
+          "stage": "笔试",
+          "note": "已安排笔试"
         }
       ]
     },
@@ -1093,15 +1219,15 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-16 10:04:00",
-          "stage": "未通过",
-          "note": "岗位方向不完全匹配"
+          "stage": "面试",
+          "note": "面试进行中"
         },
         {
           "job_id": 2,
           "job_title": "新媒体运营专员",
-          "applied_at": "2026-11-18 15:04:00",
-          "stage": "简历通过",
-          "note": "已通过简历筛选"
+          "applied_at": "2026-11-18 10:04:00",
+          "stage": "待入职",
+          "note": "等待入职"
         }
       ]
     },
@@ -1133,15 +1259,15 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-17 10:05:00",
-          "stage": "已投递",
-          "note": "等待简历筛选"
+          "stage": "终面通过",
+          "note": "终面已通过"
         },
         {
           "job_id": 3,
           "job_title": "数据分析实习生",
-          "applied_at": "2026-11-16 09:05:00",
-          "stage": "简历通过",
-          "note": "已通过简历筛选"
+          "applied_at": "2026-11-16 10:05:00",
+          "stage": "评估通过",
+          "note": "评估已通过"
         }
       ]
     },
@@ -1173,15 +1299,15 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-18 10:06:00",
-          "stage": "简历通过",
-          "note": "已通过简历筛选"
+          "stage": "offer沟通",
+          "note": "offer 沟通中"
         },
         {
           "job_id": 2,
           "job_title": "新媒体运营专员",
-          "applied_at": "2026-11-20 15:06:00",
-          "stage": "已录用",
-          "note": "已发放口头 offer"
+          "applied_at": "2026-11-20 10:06:00",
+          "stage": "简历筛选",
+          "note": "HR 初筛中"
         }
       ]
     },
@@ -1213,8 +1339,8 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-19 10:07:00",
-          "stage": "面试中",
-          "note": "已完成业务一面"
+          "stage": "待入职",
+          "note": "等待入职"
         }
       ]
     },
@@ -1246,15 +1372,15 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-20 10:08:00",
-          "stage": "已录用",
-          "note": "已发放口头 offer"
+          "stage": "已入职",
+          "note": "已入职"
         },
         {
           "job_id": 2,
           "job_title": "新媒体运营专员",
-          "applied_at": "2026-11-15 15:08:00",
-          "stage": "已投递",
-          "note": "等待简历筛选"
+          "applied_at": "2026-11-15 10:08:00",
+          "stage": "评估通过",
+          "note": "评估已通过"
         }
       ]
     },
@@ -1286,8 +1412,8 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-12 10:09:00",
-          "stage": "未通过",
-          "note": "岗位方向不完全匹配"
+          "stage": "简历筛选",
+          "note": "HR 初筛中"
         }
       ]
     },
@@ -1319,22 +1445,22 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-13 10:10:00",
-          "stage": "已投递",
-          "note": "等待简历筛选"
+          "stage": "评估",
+          "note": "待完成评估"
         },
         {
           "job_id": 2,
           "job_title": "新媒体运营专员",
-          "applied_at": "2026-11-17 15:10:00",
-          "stage": "面试中",
-          "note": "已完成业务一面"
+          "applied_at": "2026-11-17 10:10:00",
+          "stage": "面试",
+          "note": "面试进行中"
         },
         {
           "job_id": 3,
           "job_title": "数据分析实习生",
-          "applied_at": "2026-11-16 09:10:00",
-          "stage": "简历通过",
-          "note": "已通过简历筛选"
+          "applied_at": "2026-11-16 10:10:00",
+          "stage": "待入职",
+          "note": "等待入职"
         }
       ]
     },
@@ -1366,8 +1492,8 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-14 10:11:00",
-          "stage": "简历通过",
-          "note": "已通过简历筛选"
+          "stage": "评估通过",
+          "note": "评估已通过"
         }
       ]
     },
@@ -1399,15 +1525,15 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-15 10:12:00",
-          "stage": "面试中",
-          "note": "已完成业务一面"
+          "stage": "笔试",
+          "note": "已安排笔试"
         },
         {
           "job_id": 2,
           "job_title": "新媒体运营专员",
-          "applied_at": "2026-11-19 15:12:00",
-          "stage": "未通过",
-          "note": "岗位方向不完全匹配"
+          "applied_at": "2026-11-19 10:12:00",
+          "stage": "offer沟通",
+          "note": "offer 沟通中"
         }
       ]
     },
@@ -1439,8 +1565,8 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-16 10:13:00",
-          "stage": "已录用",
-          "note": "已发放口头 offer"
+          "stage": "面试",
+          "note": "面试进行中"
         }
       ]
     },
@@ -1472,15 +1598,15 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-17 10:14:00",
-          "stage": "未通过",
-          "note": "岗位方向不完全匹配"
+          "stage": "终面通过",
+          "note": "终面已通过"
         },
         {
           "job_id": 2,
           "job_title": "新媒体运营专员",
-          "applied_at": "2026-11-14 15:14:00",
-          "stage": "简历通过",
-          "note": "已通过简历筛选"
+          "applied_at": "2026-11-14 10:14:00",
+          "stage": "已入职",
+          "note": "已入职"
         }
       ]
     },
@@ -1512,15 +1638,15 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-18 10:15:00",
-          "stage": "已投递",
-          "note": "等待简历筛选"
+          "stage": "offer沟通",
+          "note": "offer 沟通中"
         },
         {
           "job_id": 3,
           "job_title": "数据分析实习生",
-          "applied_at": "2026-11-16 09:15:00",
-          "stage": "简历通过",
-          "note": "已通过简历筛选"
+          "applied_at": "2026-11-16 10:15:00",
+          "stage": "笔试",
+          "note": "已安排笔试"
         }
       ]
     },
@@ -1552,15 +1678,15 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-19 10:16:00",
-          "stage": "简历通过",
-          "note": "已通过简历筛选"
+          "stage": "待入职",
+          "note": "等待入职"
         },
         {
           "job_id": 2,
           "job_title": "新媒体运营专员",
-          "applied_at": "2026-11-16 15:16:00",
-          "stage": "已录用",
-          "note": "已发放口头 offer"
+          "applied_at": "2026-11-16 10:16:00",
+          "stage": "评估",
+          "note": "待完成评估"
         }
       ]
     },
@@ -1592,8 +1718,8 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-20 10:17:00",
-          "stage": "面试中",
-          "note": "已完成业务一面"
+          "stage": "已入职",
+          "note": "已入职"
         }
       ]
     },
@@ -1625,15 +1751,15 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-12 10:18:00",
-          "stage": "已录用",
-          "note": "已发放口头 offer"
+          "stage": "简历筛选",
+          "note": "HR 初筛中"
         },
         {
           "job_id": 2,
           "job_title": "新媒体运营专员",
-          "applied_at": "2026-11-18 15:18:00",
-          "stage": "已投递",
-          "note": "等待简历筛选"
+          "applied_at": "2026-11-18 10:18:00",
+          "stage": "笔试",
+          "note": "已安排笔试"
         }
       ]
     },
@@ -1665,8 +1791,8 @@ window.SEED_DATA = {
           "job_id": 1,
           "job_title": "短视频内容策划",
           "applied_at": "2026-11-13 10:19:00",
-          "stage": "未通过",
-          "note": "岗位方向不完全匹配"
+          "stage": "评估",
+          "note": "待完成评估"
         }
       ]
     }
@@ -1712,7 +1838,8 @@ window.SEED_DATA = {
     'use strict';
 
     const STORAGE_KEY = 'ai_talent_static_db_v1';
-    const DB_VERSION = 2;
+    const DB_VERSION = 3;
+    const PIPELINE_STAGES = ['简历筛选', '评估', '评估通过', '笔试', '面试', '终面通过', 'offer沟通', '待入职', '已入职'];
     const AI_CONFIG_KEY = 'ai_talent_api_config_v1';
     const PROVIDERS = {
         anthropic: { label: 'Anthropic', baseUrl: 'https://api.anthropic.com', model: 'claude-sonnet-5-5' },
@@ -2179,18 +2306,32 @@ ${text.slice(0, 6000)}`;
     function migrateDB(db) {
         const seed = window.SEED_DATA || { talents: [] };
         const seedById = new Map((seed.talents || []).map(t => [t.id, t]));
+        const stageMap = {
+            '已投递': '简历筛选',
+            '简历通过': '评估通过',
+            '面试中': '面试',
+            '已录用': '已入职',
+            '未通过': '面试'
+        };
 
         (db.talents || []).forEach(talent => {
             const source = seedById.get(talent.id);
             if (source && source.name === talent.name) {
                 if (!talent.attachment) talent.attachment = source.attachment;
-                if (!Array.isArray(talent.applications)) talent.applications = source.applications || [];
+                if (!Array.isArray(talent.applications) || !db.version || db.version < 3) {
+                    talent.applications = JSON.parse(JSON.stringify(source.applications || []));
+                }
                 if (talent.experience_years >= 1 && String(talent.ai_analysis || '').includes('具有0年')) {
                     talent.ai_analysis = source.ai_analysis;
                 }
             } else if (!Array.isArray(talent.applications)) {
                 talent.applications = [];
             }
+
+            talent.applications.forEach(app => {
+                if (stageMap[app.stage]) app.stage = stageMap[app.stage];
+                else if (!PIPELINE_STAGES.includes(app.stage)) app.stage = '简历筛选';
+            });
         });
 
         db.version = DB_VERSION;
@@ -2382,6 +2523,21 @@ ${text.slice(0, 6000)}`;
         });
     }
 
+    function computeJobPipeline(jobId) {
+        const counts = {};
+        PIPELINE_STAGES.forEach(stage => { counts[stage] = 0; });
+
+        db.talents.forEach(talent => {
+            (talent.applications || []).forEach(app => {
+                if (Number(app.job_id) === Number(jobId) && counts[app.stage] != null) {
+                    counts[app.stage] += 1;
+                }
+            });
+        });
+
+        return PIPELINE_STAGES.map(stage => ({ stage, count: counts[stage] }));
+    }
+
     function getJobs() {
         return db.jobs
             .slice()
@@ -2391,7 +2547,8 @@ ${text.slice(0, 6000)}`;
                 title: j.title,
                 location: j.location,
                 salary_range: j.salary_range,
-                created_at: j.created_at
+                created_at: j.created_at,
+                pipeline: computeJobPipeline(j.id)
             }));
     }
 
@@ -2511,6 +2668,7 @@ ${text.slice(0, 6000)}`;
 
     <script>
         const API_BASE = '/api';
+        const PIPELINE_STAGES = ['简历筛选', '评估', '评估通过', '笔试', '面试', '终面通过', 'offer沟通', '待入职', '已入职'];
         let currentAnalysis = null;
         let currentTalent = null;
         let currentAttachmentUrl = null;
@@ -2762,28 +2920,39 @@ ${text.slice(0, 6000)}`;
         }
 
         function renderApplications(apps) {
-            const table = document.getElementById('tdApplications');
-            const container = table.closest('.table-container');
+            const list = document.getElementById('tdPipelineList');
             const empty = document.getElementById('tdNoApplications');
-            const tbody = table.querySelector('tbody');
 
             if (!apps.length) {
-                container.style.display = 'none';
+                list.innerHTML = '';
+                list.style.display = 'none';
                 empty.style.display = 'block';
-                tbody.innerHTML = '';
                 return;
             }
 
-            container.style.display = 'block';
+            list.style.display = 'flex';
             empty.style.display = 'none';
-            tbody.innerHTML = apps.map(app => `
-                <tr>
-                    <td>${escapeHtml(app.job_title || '-')}</td>
-                    <td>${escapeHtml(app.applied_at || '-')}</td>
-                    <td><span class="status-badge">${escapeHtml(app.stage || '已投递')}</span></td>
-                    <td>${escapeHtml(app.note || '-')}</td>
-                </tr>
-            `).join('');
+            list.innerHTML = apps.map(app => {
+                const stage = PIPELINE_STAGES.includes(app.stage) ? app.stage : '简历筛选';
+                const currentIndex = PIPELINE_STAGES.indexOf(stage);
+                const steps = PIPELINE_STAGES.map((name, index) => {
+                    const state = index < currentIndex ? 'done' : (index === currentIndex ? 'current' : '');
+                    return `<div class="pipeline-step ${state}">
+                        <div class="dot">${index < currentIndex ? '✓' : index + 1}</div>
+                        <div class="label">${name}</div>
+                    </div>`;
+                }).join('');
+
+                return `<div class="pipeline-card">
+                    <div class="pipeline-head">
+                        <span class="pipeline-job">${escapeHtml(app.job_title || '-')}</span>
+                        <span class="pipeline-stage-badge">${escapeHtml(stage)}</span>
+                        <span class="pipeline-date">投递：${escapeHtml(app.applied_at || '-')}</span>
+                    </div>
+                    <div class="pipeline-steps">${steps}</div>
+                    ${app.note ? `<div class="pipeline-note">${escapeHtml(app.note)}</div>` : ''}
+                </div>`;
+            }).join('');
         }
 
         function closeTalentModal() {
@@ -2879,10 +3048,17 @@ ${text.slice(0, 6000)}`;
                 const tbody = document.querySelector('#jobsTable tbody');
                 tbody.innerHTML = jobs.map(j => `
                     <tr>
-                        <td>${j.title}</td>
-                        <td>${j.location || '-'}</td>
-                        <td>${j.salary_range || '-'}</td>
+                        <td><strong>${escapeHtml(j.title)}</strong></td>
+                        <td>${escapeHtml(j.location || '-')}</td>
+                        <td>${escapeHtml(j.salary_range || '-')}</td>
                         <td>${new Date(j.created_at).toLocaleDateString('zh-CN')}</td>
+                    </tr>
+                    <tr class="pipeline-summary-row">
+                        <td colspan="4">
+                            <div class="pipeline-mini">
+                                ${(j.pipeline || []).map(p => `<span class="pipeline-mini-step">${escapeHtml(p.stage)} <b>${p.count}</b></span>`).join('')}
+                            </div>
+                        </td>
                     </tr>
                 `).join('');
             } catch (error) {
