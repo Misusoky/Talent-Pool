@@ -1712,6 +1712,7 @@ window.SEED_DATA = {
     'use strict';
 
     const STORAGE_KEY = 'ai_talent_static_db_v1';
+    const DB_VERSION = 2;
     const AI_CONFIG_KEY = 'ai_talent_api_config_v1';
     const PROVIDERS = {
         anthropic: { label: 'Anthropic', baseUrl: 'https://api.anthropic.com', model: 'claude-sonnet-5-5' },
@@ -2175,12 +2176,37 @@ ${text.slice(0, 6000)}`;
         setApiStatus('已清除，恢复本地规则分析', '');
     }
 
+    function migrateDB(db) {
+        const seed = window.SEED_DATA || { talents: [] };
+        const seedById = new Map((seed.talents || []).map(t => [t.id, t]));
+
+        (db.talents || []).forEach(talent => {
+            const source = seedById.get(talent.id);
+            if (source && source.name === talent.name) {
+                if (!talent.attachment) talent.attachment = source.attachment;
+                if (!Array.isArray(talent.applications)) talent.applications = source.applications || [];
+                if (talent.experience_years >= 1 && String(talent.ai_analysis || '').includes('具有0年')) {
+                    talent.ai_analysis = source.ai_analysis;
+                }
+            } else if (!Array.isArray(talent.applications)) {
+                talent.applications = [];
+            }
+        });
+
+        db.version = DB_VERSION;
+        saveDB(db);
+        return db;
+    }
+
     function initDB() {
         try {
             const raw = localStorage.getItem(STORAGE_KEY);
             if (raw) {
                 const parsed = JSON.parse(raw);
-                if (parsed && parsed.talents) return parsed;
+                if (parsed && parsed.talents) {
+                    if (parsed.version === DB_VERSION) return parsed;
+                    return migrateDB(parsed);
+                }
             }
         } catch (e) {
             console.warn('本地数据读取失败，将使用示例数据：', e);
@@ -2189,6 +2215,7 @@ ${text.slice(0, 6000)}`;
         const seed = window.SEED_DATA || { talents: [], jobs: [], matches: [] };
         const db = JSON.parse(JSON.stringify(seed));
         db.matches = db.matches || [];
+        db.version = DB_VERSION;
 
         if (!db.matches.length && db.jobs.length && db.talents.length) {
             const preview = computeMatches(db, db.jobs[0].id).slice(0, 3);
