@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI人才库系统 - 波克城市HR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: rgba(255,255,255,0.95);
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .content {
+            background: rgba(255,255,255,0.95);
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .tech-stack {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .tech-stack h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            margin: 5px 5px 5px 0;
+            font-size: 12px;
+        }
+        
+        .demo-section {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 2px solid #eee;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .demo-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .demo-item h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .demo-item p {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 AI人才库系统</h1>
+            <p class="subtitle">波克城市 - HR实习生岗位能力测试项目</p>
+        </header>
+        
+        <div class="content">
+            <section>
+                <h2>📋 项目说明</h2>
+                <p>这是一个基于Flask + Claude AI的智能人才库管理系统，完整演示了一个现代化的HR解决方案。</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>📥 简历导入</h3>
+                        <p>支持PDF简历拖拽导入，自动提取邮箱、电话等关键信息</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🤖 AI分析</h3>
+                        <p>使用Claude AI智能解析简历，提取岗位信息和职业发展分析</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>👥 人才库管理</h3>
+                        <p>完整的人才信息管理系统，支持查询和编辑</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📢 岗位管理</h3>
+                        <p>创建和管理招聘岗位，定义岗位要求</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🎯 智能匹配</h3>
+                        <p>基于AI的人岗匹配，自动推荐最适合的候选人</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📊 匹配历史</h3>
+                        <p>记录所有匹配结果，支持追踪和分析</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="tech-stack">
+                <h3>🛠 技术栈</h3>
+                <div>
+                    <span class="badge">Flask</span>
+                    <span class="badge">Python</span>
+                    <span class="badge">Claude AI API</span>
+                    <span class="badge">SQLite</span>
+                    <span class="badge">HTML5</span>
+                    <span class="badge">CSS3</span>
+                    <span class="badge">JavaScript</span>
+                    <span class="badge">PyPDF2</span>
+                </div>
+            </section>
+            
+            <section class="demo-section">
+                <h2>📚 核心功能演示</h2>
+                
+                <div class="demo-grid">
+                    <div class="demo-item">
+                        <h4>1. 人才库</h4>
+                        <p>查看导入的所有候选人信息</p>
+                    </div>
+                    <div class="demo-item">
+                        <h4>2. 招聘岗位</h4>
+                        <p>创建和管理招聘岗位需求</p>
+                    </div>
+                    <div class="demo-item">
+                        <h4>3. 智能匹配</h4>
+                        <p>AI自动匹配人岗适配度</p>
+                    </div>
+                    <div class="demo-item">
+                        <h4>4. 匹配历史</h4>
+                        <p>查看历史匹配结果记录</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section style="margin-top: 30px;">
+                <h2>📂 项目结构</h2>
+                <pre style="background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto;"><code>Talent-Pool/
+├── app.py                      # Flask主应用
+├── templates/index.html        # Web前端
+├── 示例简历/                   # 20份示例简历PDF
+├── requirements.txt            # Python依赖
+├── README.md                   # 项目说明
+├── QUICK_START.md              # 快速开始指南
+├── SET_API_KEY.md              # API密钥设置
+└── TROUBLESHOOTING.md          # 故障排查</code></pre>
+            </section>
+            
+            <section style="margin-top: 30px;">
+                <h2>🚀 完整应用链接</h2>
+                <p>完整的Flask应用已部署到GitHub：</p>
+                <p style="margin: 15px 0;"><strong>GitHub仓库：</strong> <a href="https://github.com/Misusoky/Talent-Pool" target="_blank">https://github.com/Misusoky/Talent-Pool</a></p>
+                
+                <p style="margin: 15px 0;"><strong>部署方式：</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>✅ 本地运行：Python Flask应用</li>
+                    <li>✅ Docker部署：包含Dockerfile</li>
+                    <li>✅ Vercel部署：自动部署配置</li>
+                </ul>
+            </section>
+            
+            <section style="margin-top: 30px;">
+                <h2>📝 核心特性</h2>
+                <ul style="margin-left: 20px; line-height: 2;">
+                    <li>✅ 拖拽式PDF简历导入</li>
+                    <li>✅ AI智能简历解析（支持Claude和本地分析）</li>
+                    <li>✅ 20份示例简历用于演示</li>
+                    <li>✅ 完整的人才库管理系统</li>
+                    <li>✅ 招聘岗位管理</li>
+                    <li>✅ 智能人岗匹配算法</li>
+                    <li>✅ 匹配历史记录</li>
+                    <li>✅ 响应式设计</li>
+                    <li>✅ 生产就绪的代码</li>
+                </ul>
+            </section>
+            
+            <section style="margin-top: 30px;">
+                <h2>🎓 学习价值</h2>
+                <p>这个项目完整展示了：</p>
+                <ul style="margin-left: 20px; line-height: 2; margin-top: 10px;">
+                    <li>🐍 Python Flask框架的实际应用</li>
+                    <li>🤖 AI API集成（Claude）</li>
+                    <li>📄 PDF处理（PyPDF2）</li>
+                    <li>💾 SQLite数据库设计</li>
+                    <li>🎨 现代Web UI设计</li>
+                    <li>🔗 RESTful API设计</li>
+                    <li>📦 项目部署和配置</li>
+                    <li>📚 完整文档编写</li>
+                </ul>
+            </section>
+            
+            <div class="footer">
+                <p>✨ AI人才库系统 | 波克城市 HR实习生测试项目</p>
+                <p>© 2024 | <a href="https://github.com/Misusoky/Talent-Pool">GitHub</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
