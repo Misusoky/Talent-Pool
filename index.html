@@ -1402,8 +1402,10 @@ window.SEED_DATA = {
         return base + '/chat/completions';
     }
 
-    async function requestAI(config, prompt, maxTokens) {
+    async function requestAI(config, prompt, maxTokens, attempt) {
         const cfg = normalizeAIConfig(config);
+        const tries = attempt || 0;
+        const budget = maxTokens || 1024;
         if (!cfg.apiKey) throw new Error('未配置 API Key');
         if (!cfg.model) throw new Error('未填写模型');
 
@@ -1417,15 +1419,16 @@ window.SEED_DATA = {
             headers['anthropic-dangerous-direct-browser-access'] = 'true';
             body = {
                 model: cfg.model,
-                max_tokens: maxTokens || 1024,
+                max_tokens: budget,
                 messages: [{ role: 'user', content: prompt }]
             };
         } else {
             headers['authorization'] = 'Bearer ' + cfg.apiKey;
             body = {
                 model: cfg.model,
-                max_tokens: maxTokens || 1024,
+                max_tokens: budget,
                 temperature: 0.2,
+                stream: false,
                 messages: [{ role: 'user', content: prompt }]
             };
         }
@@ -1449,20 +1452,33 @@ window.SEED_DATA = {
         }
 
         let text = '';
+        let finishReason = '';
         if (isAnthropic) {
             text = ((data && data.content) || [])
                 .filter(block => block.type === 'text')
                 .map(block => block.text)
                 .join('\n');
+            finishReason = (data && data.stop_reason) || '';
         } else {
-            const content = data && data.choices && data.choices[0]
-                && data.choices[0].message && data.choices[0].message.content;
+            const choice = data && data.choices && data.choices[0];
+            finishReason = (choice && choice.finish_reason) || '';
+            const content = choice && choice.message && choice.message.content;
             text = Array.isArray(content)
                 ? content.map(part => part.text || '').join('')
                 : (content || '');
         }
 
-        if (!text.trim()) throw new Error('API 返回内容为空');
+        const truncated = finishReason === 'length' || finishReason === 'max_tokens';
+        if (truncated && tries < 2 && budget < 16384) {
+            return requestAI(cfg, prompt, Math.min(16384, budget * 4), tries + 1);
+        }
+
+        if (!text.trim()) {
+            const reasonHint = finishReason ? '（finish_reason: ' + finishReason + '）' : '';
+            throw new Error(truncated
+                ? '模型把 token 用在了思考过程或被截断' + reasonHint + '，请增大 max_tokens 或关闭 thinking 模式'
+                : 'API 返回内容为空' + reasonHint);
+        }
         return text;
     }
 
@@ -1485,7 +1501,7 @@ window.SEED_DATA = {
 简历内容：
 ${text.slice(0, 6000)}`;
 
-        const raw = await callAI(prompt, 1200);
+        const raw = await callAI(prompt, 4096);
         const start = raw.indexOf('{');
         const end = raw.lastIndexOf('}');
         if (start < 0 || end < start) throw new Error('AI 返回格式异常');
@@ -1593,7 +1609,7 @@ ${text.slice(0, 6000)}`;
 
         setApiStatus('正在测试连接...', '');
         try {
-            const reply = await requestAI(config, '请只回复：连接成功', 16);
+            const reply = await requestAI(config, '请只回复：连接成功', 1024);
             setApiStatus('✅ 连接成功，模型回复：' + reply.trim().slice(0, 40), 'ok');
         } catch (e) {
             setApiStatus('❌ 连接失败：' + e.message, 'err');
